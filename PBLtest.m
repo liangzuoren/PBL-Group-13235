@@ -3,14 +3,10 @@
 %hi teja
 %hi megan
 <<<<<<< HEAD
-<<<<<<< HEAD
 %hi tony!
 %teja_10/6_test
 =======
 <<<<<<< HEAD
-=======
-% <<<<<<< HEAD
->>>>>>> 3fad6573fd84ffb1fcd1b5df790ae057b54dd72a
 
 function PBLtest
 gasexchange2
@@ -194,3 +190,39 @@ end
 %hi tony!
 >>>>>>> a97a06baaa8273de4bda938cba276dd71daffa4a
 >>>>>>> 5570270266d8e750bdca3fcea7c461f4f2d3928f
+
+
+%PV=nRT
+%R=62.36 (L*mmHg)(mol*K)
+
+% BTP values assumed for function deadspace and function gas_exchange_1
+function values_ds= deadspace(n2,nCO2,nN2,nH2O)
+DSV=0.30*TV;   %30% of the total inhaled air goes to dead space
+VO2=(nO2*62.36*310)/149.3;  %partial volume of O2 during both inhalation and exhalation
+VCO2=(nCO2*62.36*310)/0.3;  %partial volume of CO2 during both inhalation and exhalation
+VN2=(nN2*62.36*310)/563.4;  %partial volume of N2 during both inhalation and exhalation
+VH2O=(nH2O*62.36*310)/47;   %partial volume of H2O during both inhalation and exhalation
+values_ds=[VO2 VCO2 VN2 VH2O];  %partial volumes for deadspace unit
+A: m3-m4=0;  %total mass flow rate equation
+m3w3,CO2-m4w4,CO2=0;  %mass flow rate equation for CO2
+m3w3,O2-m4w4,O2=0; %mass flow rate equation for O2
+m3w3,N2-m4w4,N2=0; %mass flow rate equation for N2
+m3w3,H2O-m4w4,H2O=0; %mass flow rate equation for H2O
+end
+
+function values_ge1= gas_exchange_1(nO2_i,nCO2_i,nO2_f,nCO2_f,nN2,nH2O)
+ge1v=0.70*tv; %70% of the total inhaled air goes to the gas exchange 1 box
+VO2_i=(nO2_i*62.36*310)/149.3;  %partial volume of O2 during inhalation
+VCO2_i=(nCO2_i*62.36*310)/0.3; %partial volume of CO2 during inhalation
+VO2_f=(nO2_f*62.36*310)/120; %partial volume of O2 during exhalation
+VCO2_f=(nCO2_f*62.36*310)/27;  %partial volume of CO2 during exhalation
+VN2_i=(nN2*62.36*310)/563.4; %partial volume of N2 during exhalation
+VN2_f=(nN2*62.36*310)/566; %partial volume of N2 during exhalation
+VH2O=(nH2O*62.36*310)/47;  %partial volume of H2O during both inhalation and exhalation
+values_ge1=[VO2_i VCO2_i VO2_f VCO2_f VN2_i VN2_f VH2O];  %partial volumes for gas exchange 1 unit
+Total: m5+m8+m10-m6-m7-m9=0;  %total mass flow rate equation
+m10w10,CO2+m8w8,CO2-m6w6,CO2=0;  %mass flow rate equation for CO2
+m5w5,O2-m9w9,O2-m7w7,O2=0;  %mass flow rate equation for O2
+m5w5,N2-m6w6,N2=0;  %mass flow rate equation for N2
+m5w5,H2O-m6w6,H2O=0;  %mass flow rate equation for H2O
+end
