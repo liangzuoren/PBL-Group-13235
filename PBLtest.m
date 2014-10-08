@@ -6,6 +6,7 @@
 function PBLtest
 gasexchange2
 entry
+blood
 end
 
 function entry
@@ -214,3 +215,43 @@ m5w5,O2-m9w9,O2-m7w7,O2=0;  %mass flow rate equation for O2
 m5w5,N2-m6w6,N2=0;  %mass flow rate equation for N2
 m5w5,H2O-m6w6,H2O=0;  %mass flow rate equation for H2O
 end
+
+%only for steady state
+function blood
+vO2inGE1 = 21; %ml/min/mm Hg
+%vO2inGE2 = ;
+
+dO2 =  density(1, 31.9988, 288); %1 atm, 31.9988 g/mol, 288 K
+dCO2 = density(1, 44.0095, 288); %1 atm, 44.0095 g/mol, 288 K
+
+[mCO2outGE1, mO2inGE1] = bloodGE1(vCO2outGE1, vO2inGE1, dO2, dCO2) ;
+[mCO2outGE2, mO2inGE2] = bloodGE2(vCO2outGE2, vO2inGE2, dO2, dCO2);
+[mCO2inSurroundings, mO2outSurroundings] = bloodSurroundings(vCO2inSurr, vO2outSurr, dO2, dCO2);
+ 
+mCO2in = mCO2inSurroundings; %adding up all the mass flow rates of streams bringing CO2 in
+mCO2out = mCO2outGE1 + mCO2outGE2; %adding up all the mass flow rates of streams bringing CO2 out
+mO2in = mO2inGE1 + mO2inGE2; %adding up all the mass flow rates of streams bringing O2 in
+mO2out = mO2outSurroundings; %adding up all the mass flor rates of streams bringing O2 out
+
+blood = [mO2in mCO2in mO2out mCO2out]; %blood box = mass flow rate 
+return
+
+function [mCO2in, mO2out] = bloodGE1(vCO2, vO2, dO2, dCO2)
+mCO2in = v2m(vCO2 , dCO2);
+mO2out = v2m(vO2 , dO2);
+end
+
+function [mCO2in, mO2out] = bloodGE2(vCO2, vO2, dO2, dCO2)    
+mCO2in = v2m(vCO2 , dCO2);
+mO2out = v2m(vO2 , dO2);
+end
+
+function [mCO2out, mO2in] = bloodSurroundings(vCO2, vO2, dO2, dCO2)
+mCO2out = v2m(vCO2 , dCO2);
+mO2in = v2m(vO2 , dO2);
+end
+
+%this function converts volumetric flow rate to mass flor rate
+function massflowrate = v2m(volumetricflowrate, density)
+massflowrate = volumetricflowrate*density;
+end 
