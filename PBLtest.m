@@ -2,7 +2,7 @@
 %Show up please!!
 %hi teja
 %hi megan
-<<<<<<< HEAD
+% <<<<<<< HEAD
 
 function PBLtest
 gasexchange2
