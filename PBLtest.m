@@ -2,6 +2,7 @@
 %Show up please!!
 %hi teja
 %hi megan
+<<<<<<< HEAD
 
 function PBLtest
 gasexchange2
@@ -181,3 +182,6 @@ d = (M * P) / (T * R);
 end
 
 
+=======
+%hi tony!
+>>>>>>> a97a06baaa8273de4bda938cba276dd71daffa4a
