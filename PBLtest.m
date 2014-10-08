@@ -3,10 +3,14 @@
 %hi teja
 %hi megan
 <<<<<<< HEAD
+<<<<<<< HEAD
 %hi tony!
 %teja_10/6_test
 =======
 <<<<<<< HEAD
+=======
+% <<<<<<< HEAD
+>>>>>>> 3fad6573fd84ffb1fcd1b5df790ae057b54dd72a
 
 function PBLtest
 gasexchange2
