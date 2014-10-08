@@ -2,17 +2,6 @@
 %Show up please!!
 %hi teja
 %hi megan
-<<<<<<< HEAD
-%hi tony!
-%teja_10/6_test
-% <<<<<<< HEAD
-=======
-<<<<<<< HEAD
-%hi tony!
-%teja_10/6_test
-=======
-<<<<<<< HEAD
->>>>>>> dc28aca6b597bcbf18f9d3383ca9badc06dfc957
 
 function PBLtest
 gasexchange2
@@ -191,15 +180,6 @@ R = 62.3637; % if units chosen are mmHg, L, and K
 d = (M * P) / (T * R);
 end
 
-<<<<<<< HEAD
-=======
-
-=======
-%hi tony!
->>>>>>> a97a06baaa8273de4bda938cba276dd71daffa4a
->>>>>>> 5570270266d8e750bdca3fcea7c461f4f2d3928f
-
-
 %PV=nRT
 %R=62.36 (L*mmHg)(mol*K)
 
@@ -234,4 +214,3 @@ m5w5,O2-m9w9,O2-m7w7,O2=0;  %mass flow rate equation for O2
 m5w5,N2-m6w6,N2=0;  %mass flow rate equation for N2
 m5w5,H2O-m6w6,H2O=0;  %mass flow rate equation for H2O
 end
->>>>>>> dc28aca6b597bcbf18f9d3383ca9badc06dfc957
