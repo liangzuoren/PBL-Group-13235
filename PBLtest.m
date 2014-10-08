@@ -2,15 +2,9 @@
 %Show up please!!
 %hi teja
 %hi megan
-<<<<<<< HEAD
-<<<<<<< HEAD
 %hi tony!
 %teja_10/6_test
-=======
-<<<<<<< HEAD
-=======
 % <<<<<<< HEAD
->>>>>>> 3fad6573fd84ffb1fcd1b5df790ae057b54dd72a
 
 function PBLtest
 gasexchange2
@@ -189,8 +183,3 @@ R = 62.3637; % if units chosen are mmHg, L, and K
 d = (M * P) / (T * R);
 end
 
-
-=======
-%hi tony!
->>>>>>> a97a06baaa8273de4bda938cba276dd71daffa4a
->>>>>>> 5570270266d8e750bdca3fcea7c461f4f2d3928f
