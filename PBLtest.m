@@ -1,8 +1,3 @@
-%PBL TEAM 13235 test
-%Show up please!!
-%hi teja
-%hi megan
-
 function PBLtest
 gasexchange2
 entry
@@ -218,11 +213,15 @@ end
 
 %only for steady state
 function blood
-vO2inGE1 = 21; %ml/min/mm Hg
-%vO2inGE2 = ;
+vO2inGE2 = 21; %ml/min/mm Hg
+vO2inGE1 = vO2inGE2/0.7*0.3;
+vCO2outGE2 = 451;
+vCO2outGE1 = vCO2outGE2/0.7*0.3;
+vO2outblood = VO2inGE1 + VO2inGE2;
+vCO2inblood = VCO2outGE1 + VCO2outGE2;
 
-dO2 =  density(1, 31.9988, 288); %1 atm, 31.9988 g/mol, 288 K
-dCO2 = density(1, 44.0095, 288); %1 atm, 44.0095 g/mol, 288 K
+dO2 =  density(1, 31.9988, 310); %1 atm, 31.9988 g/mol, 310 K(body temperature)
+dCO2 = density(1, 44.0095, 310); %1 atm, 44.0095 g/mol, 310 K(body temperature)
 
 [mCO2outGE1, mO2inGE1] = bloodGE1(vCO2outGE1, vO2inGE1, dO2, dCO2) ;
 [mCO2outGE2, mO2inGE2] = bloodGE2(vCO2outGE2, vO2inGE2, dO2, dCO2);
@@ -251,7 +250,7 @@ mCO2out = v2m(vCO2 , dCO2);
 mO2in = v2m(vO2 , dO2);
 end
 
-%this function converts volumetric flow rate to mass flor rate
+%this function converts volumetric flow rate to mass flow rate
 function massflowrate = v2m(volumetricflowrate, density)
 massflowrate = volumetricflowrate*density;
 end 
