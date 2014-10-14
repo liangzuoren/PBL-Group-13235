@@ -230,7 +230,7 @@ dCO2 = density(1, 44.0095, 310); %1 atm, 44.0095 g/mol, 310 K(body temperature)
 mCO2in = mCO2inSurroundings; %adding up all the mass flow rates of streams bringing CO2 in
 mCO2out = mCO2outGE1 + mCO2outGE2; %adding up all the mass flow rates of streams bringing CO2 out
 mO2in = mO2inGE1 + mO2inGE2; %adding up all the mass flow rates of streams bringing O2 in
-mO2out = mO2outSurroundings; %adding up all the mass flor rates of streams bringing O2 out
+mO2out = mO2outSurroundings; %adding up all the mass flow rates of streams bringing O2 out
 
 blood = [mO2in mCO2in mO2out mCO2out]; %blood box = mass flow rate 
 return
@@ -253,4 +253,11 @@ end
 %this function converts volumetric flow rate to mass flow rate
 function massflowrate = v2m(volumetricflowrate, density)
 massflowrate = volumetricflowrate*density;
-end 
+end
+
+
+%calcuate mass flow rateswith regards to time
+%model diffusion over time
+%partial pressure change over time
+%
+%
