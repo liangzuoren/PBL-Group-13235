@@ -7,14 +7,40 @@ end
 function entry
 vper1 = [vper1O2 vper1CO2 vper1N2 vper1H2O vper1He vper1Ne vper1Ar vper1Kr vper1Xe];
 vper2 = [vper2O2 vper2CO2 vper2N2 vper2H2O vper2He vper2Ne vper2Ar vper2Kr vper2Xe];
-vper4 = [vper4O2 vper4CO2 vper4N2 vper4H2O vper4He vper4Ne vper4Ar vper4Kr vper4Xe];
-vper5 = [vper5O2 vper5CO2 vper5N2 vper5H2O vper5He vper5Ne vper5Ar vper5Kr vper5Xe];
-vper6 = [vper6O2 vper6CO2 vper6N2 vper6H2O vper6He vper6Ne vper6Ar vper6Kr vper6Xe];
-vper7 = [vper7O2 vper7CO2 vper7N2 vper7H2O vper7He vper7Ne vper7Ar vper7Kr vper7Xe];
-vper = [vper1; vper2; vper4; vper5; vper6; vper7];
-% vper = volume percentages for each constitunet in each stream
-% Note: vper values for streams 4, 5, and 6 will be equal
-% vper7 based on gas exchange 1 and 2
+% vper1 and vper2 from research
+vper4 = humid();
+% calculates composition after humidification in Entry unit
+vper5 = vper4;
+vper6 = vper4;
+% composition of streams 4, 5, and 6 equal because Entry unit is splitter
+
+% H = height in meters
+% W = weight in kilograms
+% are we assuming average male?
+TV = 0.5; % liters
+RFin,RFex = RF(H,W);
+for t = 0:5 %***APPROXIMATE*** What are real values?
+    vflow1(t) = volumetricflow(RFin,TV,t);
+    % volumetric flow rate for inspiration in L/s
+    vflow2(t) = volumetricflow(RFex,TV,t);
+    % volumetric flow rate for expiration in L/s
+    vflow4(t) = 0.3 * vflow1(t);
+    vflow6(t) = 0.7 * vflow1(t);
+    % entry unit is splitter, 30% of flow to Dead Space and 70% to Gas Exchange
+
+    % calculate vflow3 somehow...
+
+    Pav(t) = alveolarpressure(vflow1,t);
+    % calculates alveolar pressure with respect to time
+    vflow8(t) = 21*60/100*Pav(t);
+    % calculates O2 transport with respect to time
+    vflow9(t) = 425*60/100*Pav(t);
+    % calculates CO2 transport with respect to time
+    
+    % is flow 8 and 9 at a certain time equivalent to 10 and 11 for that 
+    % time, for average of all locations at that time?
+    
+end
 
 M1 = [31.9988 44.0095 28.01348 33.00674 4.006202 20.1797 39.948 83.8 ...
     131.29];
@@ -65,11 +91,12 @@ end
 % Ti = the temperature of one object involved in heat transfer
 % Tf = the temperature of the other object involved in heat transfer
 % dt = the change in temperature
-
 function Q = thermal(mass,c,Ti,Tf)
 dT = Tf - Ti;
 Q = mass * c * dT;
 end
+
+
 
 % massfrac calculates the mass fraction of constituents in a stream
 % vper = the volume percentage of the constituents
@@ -234,6 +261,7 @@ mO2out = mO2outSurroundings; %adding up all the mass flow rates of streams bring
 
 blood = [mO2in mCO2in mO2out mCO2out]; %blood box = mass flow rate 
 return
+end
 
 function [mCO2in, mO2out] = bloodGE1(vCO2, vO2, dO2, dCO2)
 mCO2in = v2m(vCO2 , dCO2);
@@ -256,8 +284,40 @@ massflowrate = volumetricflowrate*density;
 end
 
 
+<<<<<<< HEAD
 %calcuate mass flow rateswith regards to time
 %model diffusion over time
 %partial pressure change over time
 %
 %
+=======
+%humid calculates volume percentage in humidfied air
+function humid()
+end
+
+%calculates respiration frequency in breaths per minute for males
+% H = height in meters
+% W = weight in kilograms
+% RFin = respiration frequency for inspiration
+% RFex = respiration frequency for expiration
+function [RFin, RFex] = RF(H,W)
+RFin = 46.43 - 18.85*H + 0.2602*W;
+RFex = 77.03 - 45.42*H + 0.2373*W;
+end
+
+% calculates volumetric flow rate of inspiration or expiration based on
+% breathing frequency
+function vflow = volumetricflow(RF,TV,t)
+vflow = (pi*RF*TV)/60 * sin(pi*RF*t/30);
+end
+
+% calculates the pressure in the alveoli with respect to time
+% Raw = airway resistance
+% Pb = baromatic pressure
+function alveolarpressure(vflow1,t)
+% Raw = 
+Pb = 760; % mmHg
+Pav = vflow1 * Raw + Pb;
+
+
+>>>>>>> d7466b1160081af270c681b92d0a24f29cae1aee
