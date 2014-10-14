@@ -8,7 +8,7 @@ function entry
 vper1 = [vper1O2 vper1CO2 vper1N2 vper1H2O vper1He vper1Ne vper1Ar vper1Kr vper1Xe];
 vper2 = [vper2O2 vper2CO2 vper2N2 vper2H2O vper2He vper2Ne vper2Ar vper2Kr vper2Xe];
 % vper1 and vper2 from research
-vper4 = humid();
+vper4 = humid(vper_1,0.5,50);
 % calculates composition after humidification in Entry unit
 vper5 = vper4;
 vper6 = vper4;
