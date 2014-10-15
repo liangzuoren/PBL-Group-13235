@@ -9,38 +9,53 @@ vper1 = [vper1O2 vper1CO2 vper1N2 vper1H2O vper1He vper1Ne vper1Ar vper1Kr vper1
 vper2 = [vper2O2 vper2CO2 vper2N2 vper2H2O vper2He vper2Ne vper2Ar vper2Kr vper2Xe];
 % vper1 and vper2 from research
 vper4 = humid(vper_1,0.5,50);
-% calculates composition after humidification in Entry unit
+% calculates composition after humidification in Entry unit, or can we get
+% these values from research?
 vper5 = vper4;
 vper6 = vper4;
 % composition of streams 4, 5, and 6 equal because Entry unit is splitter
 
 % H = height in meters
 % W = weight in kilograms
-% are we assuming average male?
 TV = 0.5; % liters
-RFin,RFex = RF(H,W);
-for t = 0:5 %***APPROXIMATE*** What are real values?
-    vflow1(t) = volumetricflow(RFin,TV,t);
+[RFin,RFex] = RF(H,W);
+% texp = time for end of expiration
+t = 0:0.1:texp;
+index = length(t);
+for i = 1:index
+    vflow1(i) = volumetricflow(RFin,TV,t(i));
     % volumetric flow rate for inspiration in L/s
-    vflow2(t) = volumetricflow(RFex,TV,t);
+    vflow2(i) = volumetricflow(RFex,TV,t(i));
     % volumetric flow rate for expiration in L/s
-    vflow4(t) = 0.3 * vflow1(t);
-    vflow6(t) = 0.7 * vflow1(t);
+    vflow4(i) = 0.3 * vflow1(i);
+    vflow6(i) = 0.7 * vflow1(i);
     % entry unit is splitter, 30% of flow to Dead Space and 70% to Gas Exchange
 
     % calculate vflow3 somehow...
-
-    Pav(t) = alveolarpressure(vflow1,t);
-    % calculates alveolar pressure with respect to time
-    vflow8(t) = 21*60/100*Pav(t);
-    % calculates O2 transport with respect to time
-    vflow9(t) = 425*60/100*Pav(t);
-    % calculates CO2 transport with respect to time
+     
+    x = deadspace_expfrac(TV,RFex,texp);
+    vflow5(i) = x*vflow2(i);
+    vflow7(i) = vflow2(i) - vflow5(i);
     
-    % is flow 8 and 9 at a certain time equivalent to 10 and 11 for that 
-    % time, for average of all locations at that time?
+    Pav(i) = alveolarpressure(vflow1(i));
+    % calculates alveolar pressure with respect to time
+    vflow8(i) = 21*60/100*Pav(i);
+    % calculates O2 transport with respect to time
+    vflow9(i) = 425*60/100*Pav(i);
+    % calculates CO2 transport with respect to time
+    vflow10(i) = vflow8(i);
+    vflow11(i) = vflow9(i);
+    % solves volumetric flow conservation equations for blood unit to
+    % calculate O2 and CO2 transport rate out of the blood to tissues
     
 end
+
+vflow = [vflow1; vflow2; vflow4; vflow5; vflow6; vflow7; vflow8; vflow9; vflow10; vflow11];
+plot(t,vflow1,t,vflow2,t,vflow4,t,vflow5,t,vflow6,t,vflow7)
+figure
+plot(t,vflow8,t,vflow10)
+figure
+plot(t,vflow9,t,vflow11)
 
 M1 = [31.9988 44.0095 28.01348 33.00674 4.006202 20.1797 39.948 83.8 ...
     131.29];
@@ -50,7 +65,7 @@ M = [M1; M1; M1; M1; M1; M1];
 w = massfrac(vper,M);
 % w = the mass fraction of each constituent in each stream
 
-mass1 = totalmass(0.500,vper1,M);
+mass1 = totalmass(TV,vper1,M1);
 % mass1 = the total mass of inspired air
 m1 = mass1 / t_insp;
 % t_insp = time of inspiration
@@ -148,8 +163,8 @@ end
 
 function mass1 = totalmass(vtot,vper,M)
 vfrac = vper ./ 100;
-v = vfrac * vtot;
-pp = 760 * vfrac;
+v = vfrac .* vtot;
+pp = 760 .* vfrac;
 Ta = 288;
 R = 62.3637;
 n = (pp .* v) / (R * Ta);
@@ -326,11 +341,21 @@ end
 % calculates the pressure in the alveoli with respect to time
 % Raw = airway resistance
 % Pb = baromatic pressure
-function alveolarpressure(vflow1,t)
+function Pav = alveolarpressure(vflow1)
 % Raw = 
 Pb = 760; % mmHg
 Pav = vflow1 * Raw + Pb;
 end
+
+% I couldn't figure out how to integrate when solving for a variable within
+% the integral, so I worked the integral out by hand for now
+% deadvol = the volume fo air the dead space contains
+function x = deadspace_expfrac(TV,RFex,texp)
+deadvol = 0.3 * TV;
+x = 2*deadvol/TV * (1 / (1 - cos(pi*RFex*texp/30)));
+end
+    
+
 
 
 
