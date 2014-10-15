@@ -15,11 +15,14 @@ vper5 = vper4;
 vper6 = vper4;
 % composition of streams 4, 5, and 6 equal because Entry unit is splitter
 
-% H = height in meters
-% W = weight in kilograms
+H = (5 + 9.5/12) * 0.3048; % height in meters: average man in U.S.
+W = 191 * 0.453592; % weight in kilograms: average man in U.S.
 TV = 0.5; % liters
 [RFin,RFex] = RF(H,W);
-% texp = time for end of expiration
+tin = 60/RFin;
+texp = 60/RFex;
+% calculates length of time per inspiration and expiration from breathing
+% frequencies
 t = 0:0.1:texp;
 index = length(t);
 for i = 1:index
@@ -328,7 +331,7 @@ end
 % RFin = respiration frequency for inspiration
 % RFex = respiration frequency for expiration
 function [RFin, RFex] = RF(H,W)
-RFin = 46.43 - 18.85*H + 0.2602*W;
+RFin = 55.55 - 32.86*H + 0.2602*W;
 RFex = 77.03 - 45.42*H + 0.2373*W;
 end
 
