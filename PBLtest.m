@@ -37,11 +37,12 @@ index_in = length(insp_range);
 index_exp = length(exp_range);
 index_resp = length(resp_range);
 for i = 1:index_in
-    vflow1_in(i) = volumetricflow(RFin,TV,insp_range(i));
+    vflow1_in(i) = -volumetricflow(RFin,TV,insp_range(i));
     % volumetric flow rate for inspiration in L/s
+    % airflow into body defined as negative direction
     
-    vflow4_in(i) = 0.3 * vflow1_in(i);
-    vflow6_in(i) = 0.7 * vflow1_in(i);
+    vflow4_in(i) = -0.3 * vflow1_in(i);
+    vflow6_in(i) = -0.7 * vflow1_in(i);
     % entry unit is splitter, 30% of flow to Dead Space and 70% to Gas Exchange
 
     % calculate vflow3_in somehow...
@@ -75,6 +76,13 @@ for i = 1:index_exp
 end
 
 Pav = [Pav_in Pav_ex];
+
+plot(resp_range,Pav)
+title('Alveolar Pressure Over One Respiratory Cycle')
+xlabel('Time (s)')
+ylabel('Alveolar Pressure (mmHg)')
+% graph of alveolar pressure over one full respiratory cycle
+
 vflow1 = [vflow1_in vflow1_ex];
 vflow2 = [vflow2_in vflow2_ex];
 % vflow3 = [vflow3_in vflow3_ex];
@@ -83,6 +91,9 @@ vflow5 = [vflow5_in vflow5_ex];
 vflow6 = [vflow6_in vflow6_ex];
 vflow7 = [vflow7_in vflow7_ex];
 % combines functions for inspiration and expiration
+
+% calculate Pav_O2 and Pav_CO2 from Pav
+
 
 for i = 1:index_resp
     vflow8(i) = 21*60/100*Pav(i);
@@ -97,12 +108,17 @@ end
 
 vflow = [vflow1; vflow2; vflow4; vflow5; vflow6; vflow7; vflow8; ...
     vflow9; vflow10; vflow11];
+
+figure
 plot(resp_range,vflow1,resp_range,vflow2,resp_range,vflow4,resp_range,...
     vflow5,resp_range,vflow6,resp_range,vflow7)
+title('Volumetric Flow Rates of Streams 1, 2, 4, 5, 6, and 7')
+xlabel('Time (s)')
+ylabel('Volumetric Flow Rate (L/s)')
 figure
-plot(resp_range,vflow8,resp_range,vflow10)
-figure
-plot(resp_range,vflow9,resp_range,vflow11)
+plot(resp_range,vflow8,resp_range,vflow10,resp_range,vflow9, ...
+    resp_range,vflow11)
+title('Volumetric Flow Rate for O2 and CO2 Diffusion')
 
 M1 = [31.9988 44.0095 28.01348 33.00674 4.006202 20.1797 39.948 83.8 ...
     131.29];
