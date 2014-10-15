@@ -15,33 +15,76 @@ vper5 = vper4;
 vper6 = vper4;
 % composition of streams 4, 5, and 6 equal because Entry unit is splitter
 
-H = (5 + 9.5/12) * 0.3048; % height in meters: average man in U.S.
-W = 191 * 0.453592; % weight in kilograms: average man in U.S.
+H = 1.73; % height in meters of standard man
+W = 68; % weight in kilograms of standard man
 TV = 0.5; % liters
 [RFin,RFex] = RF(H,W);
-tin = 60/RFin;
-texp = 60/RFex;
+tin = 30/RFin;
+% RFin is number of breaths per minute, divide by 2 to get number of
+% inspirations per minute and then multiply by 60s/1min to get time of
+% inspiration
+texp = 30/RFex;
+% RFex is number of breaths per minute, divide by 2 to get number of
+% exspirations per minute and then multiply by 60s/1min to get time of
+% exspiration
+tresp = tin + texp;
 % calculates length of time per inspiration and expiration from breathing
 % frequencies
-t = 0:0.1:texp;
-index = length(t);
-for i = 1:index
-    vflow1(i) = volumetricflow(RFin,TV,t(i));
+insp_range = 0:0.01:tin;
+exp_range = 0:0.01:texp;
+resp_range = 0:0.01:tresp;
+index_in = length(insp_range);
+index_exp = length(exp_range);
+index_resp = length(resp_range);
+for i = 1:index_in
+    vflow1_in(i) = volumetricflow(RFin,TV,insp_range(i));
     % volumetric flow rate for inspiration in L/s
-    vflow2(i) = volumetricflow(RFex,TV,t(i));
-    % volumetric flow rate for expiration in L/s
-    vflow4(i) = 0.3 * vflow1(i);
-    vflow6(i) = 0.7 * vflow1(i);
+    
+    vflow4_in(i) = 0.3 * vflow1_in(i);
+    vflow6_in(i) = 0.7 * vflow1_in(i);
     % entry unit is splitter, 30% of flow to Dead Space and 70% to Gas Exchange
 
-    % calculate vflow3 somehow...
+    % calculate vflow3_in somehow...
      
-    x = deadspace_expfrac(TV,RFex,texp);
-    vflow5(i) = x*vflow2(i);
-    vflow7(i) = vflow2(i) - vflow5(i);
+    vflow2_in(i) = 0;
+    vflow5_in(i) = 0;
+    vflow7_in(i) = 0;
+    %zero flow rate in these streams during inspiration
     
-    Pav(i) = alveolarpressure(vflow1(i));
-    % calculates alveolar pressure with respect to time
+    Pav_in(i) = alveolarpressure(vflow1_in(i));
+    % calculates alveolar pressure with respect to time during inspiration
+    
+end
+for i = 1:index_exp
+    vflow2_ex(i) = volumetricflow(RFex,TV,exp_range(i));
+    % volumetric flow rate for expiration in L/s
+    x = deadspace_expfrac(TV,RFex,texp);
+    vflow5_ex(i) = x*vflow2_ex(i);
+    vflow7_ex(i) = vflow2_ex(i) - vflow5_ex(i);
+    
+    Pav_ex(i) = alveolarpressure(vflow2_ex(i));
+    % calculates alveolar pressure with respect to time during expiration
+    % do I need to make anything negative or anything for expiration?
+    
+    vflow1_ex(i) = 0;
+    vflow4_ex(i) = 0;
+    vflow6_ex(i) = 0;
+    % vflow3_ex = 0;
+    %zero flow rate in these streams during expiration
+    
+end
+
+Pav = [Pav_in Pav_ex];
+vflow1 = [vflow1_in vflow1_ex];
+vflow2 = [vflow2_in vflow2_ex];
+% vflow3 = [vflow3_in vflow3_ex];
+vflow4 = [vflow4_in vflow4_ex];
+vflow5 = [vflow5_in vflow5_ex];
+vflow6 = [vflow6_in vflow6_ex];
+vflow7 = [vflow7_in vflow7_ex];
+% combines functions for inspiration and expiration
+
+for i = 1:index_resp
     vflow8(i) = 21*60/100*Pav(i);
     % calculates O2 transport with respect to time
     vflow9(i) = 425*60/100*Pav(i);
@@ -50,15 +93,16 @@ for i = 1:index
     vflow11(i) = vflow9(i);
     % solves volumetric flow conservation equations for blood unit to
     % calculate O2 and CO2 transport rate out of the blood to tissues
-    
 end
 
-vflow = [vflow1; vflow2; vflow4; vflow5; vflow6; vflow7; vflow8; vflow9; vflow10; vflow11];
-plot(t,vflow1,t,vflow2,t,vflow4,t,vflow5,t,vflow6,t,vflow7)
+vflow = [vflow1; vflow2; vflow4; vflow5; vflow6; vflow7; vflow8; ...
+    vflow9; vflow10; vflow11];
+plot(resp_range,vflow1,resp_range,vflow2,resp_range,vflow4,resp_range,...
+    vflow5,resp_range,vflow6,resp_range,vflow7)
 figure
-plot(t,vflow8,t,vflow10)
+plot(resp_range,vflow8,resp_range,vflow10)
 figure
-plot(t,vflow9,t,vflow11)
+plot(resp_range,vflow9,resp_range,vflow11)
 
 M1 = [31.9988 44.0095 28.01348 33.00674 4.006202 20.1797 39.948 83.8 ...
     131.29];
@@ -344,10 +388,10 @@ end
 % calculates the pressure in the alveoli with respect to time
 % Raw = airway resistance
 % Pb = baromatic pressure
-function Pav = alveolarpressure(vflow1)
+function Pav = alveolarpressure(vflow)
 % Raw = 
 Pb = 760; % mmHg
-Pav = vflow1 * Raw + Pb;
+Pav = vflow * Raw + Pb;
 end
 
 % I couldn't figure out how to integrate when solving for a variable within
