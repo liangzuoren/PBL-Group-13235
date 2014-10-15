@@ -8,7 +8,7 @@ function entry
 vper1 = [vper1O2 vper1CO2 vper1N2 vper1H2O vper1He vper1Ne vper1Ar vper1Kr vper1Xe];
 vper2 = [vper2O2 vper2CO2 vper2N2 vper2H2O vper2He vper2Ne vper2Ar vper2Kr vper2Xe];
 % vper1 and vper2 from research
-vper4 = humid();
+vper4 = humid(vper_1,0.5,50);
 % calculates composition after humidification in Entry unit
 vper5 = vper4;
 vper6 = vper4;
@@ -285,7 +285,26 @@ end
 
 
 %humid calculates volume percentage in humidfied air
-function humid()
+
+%humidity function calculates the volume percentages of the air constiuents
+%after is has been humidified to 100%
+%vper_i=volume percentages of air in stream before it is humidified
+%vper_h= volume percentages of air after it is humidified
+%vtot= volume of air before humdified
+%h_p= initial relative humidity of air when inspired
+%w_i=initial amount of water in air when inspired (mg/L)
+%w_f=final amount of water in air after humdidification (mg/L)
+%after they have been humidified in the lungs
+%vtot2=new volume of air after hudified
+function vper_h=humid(vper_i,vtot,h_p)
+vfrac = vper_i ./ 100;
+v = vfrac * vtot;
+w_i=4.5;   %based on 24 degrees Celsius, what temp value are we assuming for air before it is inhaled?
+w_f=22;    %based on 100% humidity at 37 degrees Celsius
+amount_of_water_added=w_f-w_i;
+vtot2=vtot+amount_of_water_added;
+v(4)=v(4)+ amount_of_water_added;   %amount of water in inspired gas after it has been humidified
+vper_h= v ./ vtot2;
 end
 
 %calculates respiration frequency in breaths per minute for males
