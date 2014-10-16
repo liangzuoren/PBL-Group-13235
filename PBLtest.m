@@ -4,6 +4,8 @@ entry
 blood
 end
 
+%Entry box is where inhaled air is humidified and exhaled air leaves the
+%body from
 function entry
 vper1 = [vper1O2 vper1CO2 vper1N2 vper1H2O vper1He vper1Ne vper1Ar vper1Kr vper1Xe];
 vper2 = [vper2O2 vper2CO2 vper2N2 vper2H2O vper2He vper2Ne vper2Ar vper2Kr vper2Xe];
@@ -210,6 +212,8 @@ function ms = constituentflow(m, w)
 ms = m .* w;
 end
 
+% Deadspace box holds 30% of the inhaled air and remixes with the air
+% during exhalation
 % deadspace calculates the mass flow rate of streams 4, 5, and 6
 % "Entry" box is a splitter
 % calculates mass flow rate based on fraction of air that goes to dead
