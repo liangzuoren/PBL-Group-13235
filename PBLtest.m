@@ -120,6 +120,12 @@ plot(resp_range,vflow8,resp_range,vflow10,resp_range,vflow9, ...
     resp_range,vflow11)
 title('Volumetric Flow Rate for O2 and CO2 Diffusion')
 
+%PP_O2_humid = 158; VERIFY USING THIS VALUE
+%PP_CO2_humid = 0.3; VERIFY USING THIS VALUE
+Tb = 310;
+% body temperature
+alveoli(Tb,Pav,TV,resp_range,index_resp,PP_O2_humid,PP_CO2_humid,vflow1)
+
 M1 = [31.9988 44.0095 28.01348 33.00674 4.006202 20.1797 39.948 83.8 ...
     131.29];
 M = [M1; M1; M1; M1; M1; M1];
@@ -412,13 +418,67 @@ end
 
 % I couldn't figure out how to integrate when solving for a variable within
 % the integral, so I worked the integral out by hand for now
-% deadvol = the volume fo air the dead space contains
+% deadvol = the volume of air the dead space contains
 function x = deadspace_expfrac(TV,RFex,texp)
 deadvol = 0.3 * TV;
 x = 2*deadvol/TV * (1 / (1 - cos(pi*RFex*texp/30)));
 end
-    
+ 
+% VA = alveolar volume
+% PP_O2_humid = partial pressure of O2 in humidifed inspired air
+% R = gas constant
+% Tb = body temperature
 
 
+function alveoli(Tb,Pav,TV,resp_range,index_resp,PP_O2_humid,PP_CO2_humid,vflow1)
+R = 62.3637;
+% gas constant
+
+C_O2_av = 0:0.01:780;
+C_CO2_av = 0:0.01:780;
+index_C_O2 = length(C_O2_av);
+index_C_CO2 = length(C_CO2_av);
+VA = 2.5; % APPROXIMATE VALUE
+
+PP_O2_av_tin = 0.7 * TV * PP_O2_humid / (VA + 0.7 * TV);
+PP_CO2_av_tin = 0.7 * TV * PP_CO2_humid / (VA + 0.7 * TV);
+
+for i = 1:index_resp
+    y(i) = - C_O2_av(i) + ((PP_O2_av_tin/(760*Tb*R) * (VA / ...
+        (1 + 21/60000*C_O2_av(i)-425/60000*C_CO2_av(i)))) / ...
+        (VA + 0.7 * TV))^((21/(60000) * C_O2_av(i) * (VA / ...
+        (1 + 21/60000*C_O2_av(i)-425/60000*C_CO2_av(i)) * C_O2_av(i)))/...
+        (0.7 * vflow1(i)));
+    z(i) = - C_CO2_av(i) + ((PP_CO2_av_tin/(760*Tb*R) * (VA / ...
+        (1 + 21/60000*C_O2_av(i)-425/60000*C_CO2_av(i)))) / ...
+        (VA + 0.7 * TV))^((425/(60000) * C_CO2_av(i) * (VA / ...
+        (1 + 21/60000*C_O2_av(i)-425/60000*C_CO2_av(i)) * C_O2_av(i)))/...
+        (0.7 * vflow1(i)));
+    if abs(y(i) - z(i)) < 0.001
+        C_O2_av_final(i) = C_O2_av(i);
+        C_CO2_av_final(i) = C_CO2_av(i);
+    end
+end
+% Vav equation DOES NOT take pressure into account - would be if alveoli
+% did not change size and just volume change due to gas exchange - FIX
+% figure out why C_CO2_av_final is increasing over time, because it should
+% decrease
+% magnitudes of concentrations too high?
+% inspiration = continuation from expiration, just extend time
+figure
+plot(resp_range,C_O2_av_final)
+title('C_O2_av_final')
+figure
+plot(resp_range,C_CO2_av_final)
+title('C_CO2_av_final')
+for i = 1:index_resp
+    Vav(i) = VA / (1 + 21/6000*C_O2_av_final(i)-425/60000*C_CO2_av_final(i));
+end
+
+figure
+plot(resp_range,Vav)
+title('Volume of Alveoli Over One Respiratory Cycle')
+
+end
 
 
