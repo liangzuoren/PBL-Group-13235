@@ -318,6 +318,5 @@ function alveolarpressure(vflow1,t)
 % Raw = 
 Pb = 760; % mmHg
 Pav = vflow1 * Raw + Pb;
+end
 
-
->>>>>>> d7466b1160081af270c681b92d0a24f29cae1aee
