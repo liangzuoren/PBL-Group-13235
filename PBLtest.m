@@ -372,27 +372,62 @@ massflowrate = volumetricflowrate*density;
 end
 
 
-%humid calculates volume percentage in humidfied air
-
-%humidity function calculates the volume percentages of the air constiuents
+%humid function calculates the volume percentages of the air constiuents
 %after is has been humidified to 100%
-%vper_i=volume percentages of air in stream before it is humidified
+%h_i= initial relative humidity of air when inspired
+%m_i=initial amount of water in air when inspired (mg)
+%m_f=final amount of water in air after humdidification (mg)
+%water_added=total amount of water added to air when it is humidified (mg)
+%mass_tot1=total mass of gas before humidified (mg)
+%mass_tot2= total mass of gas after humidified (mg)
+%w_i= initial mass fractions of gas constiuents before humidified
+%mass_i=amount of each consituent in inhaled air (mg)
+%mass_f=amount of each consituent in humidified air (mg)
+%w_f= mass fractions of gas constituents after humidified
+%vper_1=volume percentages of air in stream before it is humidified
 %vper_h= volume percentages of air after it is humidified
-%vtot= volume of air before humdified
-%h_p= initial relative humidity of air when inspired
-%w_i=initial amount of water in air when inspired (mg/L)
-%w_f=final amount of water in air after humdidification (mg/L)
-%after they have been humidified in the lungs
-%vtot2=new volume of air after hudified
-function vper_h=humid(vper_i,vtot,h_p)
-vfrac = vper_i ./ 100;
-v = vfrac * vtot;
-w_i=4.5;   %based on 24 degrees Celsius, what temp value are we assuming for air before it is inhaled?
-w_f=22;    %based on 100% humidity at 37 degrees Celsius
-amount_of_water_added=w_f-w_i;
-vtot2=vtot+amount_of_water_added;
-v(4)=v(4)+ amount_of_water_added;   %amount of water in inspired gas after it has been humidified
-vper_h= v ./ vtot2;
+%vtot= volume of air inhaled- 0.5 L in this model
+
+function vper_h=humid(h_i,vtot,vper1,M)
+m_i=(0.18*h_i)*vtot;
+%at 24 degrees Celsius, amount of water in air before humidified (mg), at 50% humidity
+m_f=22;
+%at 37 degrees Celsius, amount of water in air after humidified (mg), at 100% humidity
+water_added=m_f-m_i;
+density=1184; 
+%density of inhaled air (mg/L)
+mass_tot1=density*vtot;
+%total mass of inhaled air (mg)
+mass_tot2=mass_tot1+water_added;
+%total mass of humidifed air (mg)
+w_i=massfrac(vper1,M);   
+%finds mass fractions of all constituents of inhaled air in Stream 1
+mass_i=w_i.*mass_tot1;  
+%finds amount of each consituent in inhaled air (mg)
+mass_f=mass_i;
+%creates variable to hold mass amounts of all consituents after humidified
+mass_f(4)=mass_f(4)+ water_added;  
+%amount of water in inspired gas after it has been humidified (mg)
+w_f= mass_f ./ mass_tot2; 
+%finds mass fractions of all constituents of air after humidified
+vper_h=volumepercentage(mass_f,M);
+end
+
+%volumepercentage function calculates the volume percentages of constituents in a stream 
+%based on the amounts of each constituent (in mg)
+%mass_f=mass of all constitiuents (mg)
+%M= molar masses of all constituents (g/mol)
+%v_fracf=volumetric fractions of all gas constituents after humidified
+%vper_f= volume percentages of all gas constituents after humidified
+function vper_f=volumepercentage(mass_f,M)
+nratio=(mass_f/1000)./M;  
+%calculates number of moles of all gas constituents after humidified
+nratio_sum= sum(nratio);  
+%calculates sum of all moles of gas after humidified
+v_fracf= nratio./nratio_sum;  
+%calculates volumetric fractions (which are equal to mole fractions)
+vper_f=vfrac_f.*100;  
+%finds volume percentages of gas after humidified
 end
 
 %calculates respiration frequency in breaths per minute for males
