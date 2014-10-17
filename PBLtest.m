@@ -344,8 +344,9 @@ mO2in = mO2inGE1 + mO2inGE2; %adding up all the mass flow rates of streams bring
 mO2out = mO2outSurroundings; %adding up all the mass flow rates of streams bringing O2 out
 
 blood = [mO2in mCO2in mO2out mCO2out]; %blood box = mass flow rate 
-return
+
 end
+
 
 function [mCO2in, mO2out] = bloodGE1(vCO2, vO2, dO2, dCO2)
 mCO2in = v2m(vCO2 , dCO2);
@@ -367,14 +368,11 @@ function massflowrate = v2m(volumetricflowrate, density)
 massflowrate = volumetricflowrate*density;
 end
 
-
-<<<<<<< HEAD
 %calcuate mass flow rateswith regards to time
 %model diffusion over time
 %partial pressure change over time
 %
 %
-=======
 %humid calculates volume percentage in humidfied air
 
 %humidity function calculates the volume percentages of the air constiuents
@@ -491,6 +489,4 @@ plot(resp_range,Vav)
 title('Volume of Alveoli Over One Respiratory Cycle')
 
 end
-
->>>>>>> 9afbfa68d8bbcc10c951bfd193f70b62ff959a8f
 
