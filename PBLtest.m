@@ -1,12 +1,13 @@
 function PBLtest
-gasexchange2
 entry
 blood
 end
 
+%Entry box is where inhaled air is humidified and exhaled air leaves the
+%body from
 function entry
-vper1 = [vper1O2 vper1CO2 vper1N2 vper1H2O vper1He vper1Ne vper1Ar vper1Kr vper1Xe];
-vper2 = [vper2O2 vper2CO2 vper2N2 vper2H2O vper2He vper2Ne vper2Ar vper2Kr vper2Xe];
+vper1 = [vper1O2 vper1CO2 vper1N2 vper1H2O];
+vper2 = [vper2O2 vper2CO2 vper2N2 vper2H2O];
 % vper1 and vper2 from research
 vper4 = humid(vper_1,0.5,50);
 % calculates composition after humidification in Entry unit, or can we get
@@ -65,7 +66,6 @@ for i = 1:index_exp
     
     Pav_ex(i) = alveolarpressure(vflow2_ex(i));
     % calculates alveolar pressure with respect to time during expiration
-    % do I need to make anything negative or anything for expiration?
     
     vflow1_ex(i) = 0;
     vflow4_ex(i) = 0;
@@ -120,42 +120,17 @@ plot(resp_range,vflow8,resp_range,vflow10,resp_range,vflow9, ...
     resp_range,vflow11)
 title('Volumetric Flow Rate for O2 and CO2 Diffusion')
 
-%PP_O2_humid = 158; VERIFY USING THIS VALUE
-%PP_CO2_humid = 0.3; VERIFY USING THIS VALUE
-Tb = 310;
-% body temperature
-alveoli(Tb,Pav,TV,resp_range,index_resp,PP_O2_humid,PP_CO2_humid,vflow1)
-
-M1 = [31.9988 44.0095 28.01348 33.00674 4.006202 20.1797 39.948 83.8 ...
-    131.29];
-M = [M1; M1; M1; M1; M1; M1];
-% M = molar mass of each constituent in each stream
+M1 = [31.9988 44.0095 28.01348 33.00674];
+% M = molar mass of each constituent
 
 w = massfrac(vper,M);
 % w = the mass fraction of each constituent in each stream
 
 mass1 = totalmass(TV,vper1,M1);
 % mass1 = the total mass of inspired air
-m1 = mass1 / t_insp;
-% t_insp = time of inspiration
-% m1 = the mass flow rate of inspired air
 
-deadfrac = 0.30;
-m4,m5,m6 = deadspace(m1,deadfrac);
-% calculates mass flow rate of streams 4, 5, and 6
-
-m2 = m7 + m5;
-% m2 depends on m7
-% m7 depends on gas exchange 1 and 2
-% if no gas exchange during expiration, m7 = m9 which is calculated in 
-% gasexchange2
-
-m = [m1; m2; m3; m4; m5; m6; m7];
-% m = mass flow rates of all mass streams
-% units? check all kg vs g especially
-
-ms = constituentflow(m,w);
-% calculates mass flow rates of constituents of a stream
+vs = constituent_volume(V,w);
+% calculates volume of constituents in a unit
 
 % calculate m3
 % can do so based on m1H2O and m6H2O
@@ -175,6 +150,7 @@ end
 % Ti = the temperature of one object involved in heat transfer
 % Tf = the temperature of the other object involved in heat transfer
 % dt = the change in temperature
+
 function Q = thermal(mass,c,Ti,Tf)
 dT = Tf - Ti;
 Q = mass * c * dT;
@@ -201,24 +177,9 @@ w = mratio ./ sum_ratio;
 % mass fractions calculated from mass ratios and sum
 end
 
-% constituent flow calculates the mass flow rate of each constituent in a
-% stream
-% m = total mass of the stream
-% w = mass fractions of constituents
 
-function ms = constituentflow(m, w)
-ms = m .* w;
-end
-
-% deadspace calculates the mass flow rate of streams 4, 5, and 6
-% "Entry" box is a splitter
-% calculates mass flow rate based on fraction of air that goes to dead
-% space
-
-function [m4,m5,m6] = deadspace(m1,deadfrac)
-m4 = m1 * deadfrac; % fraction of inlet air to deadspace
-m5 = m4;
-m6 = m1 * (1 - deadfrac);
+function vs = constituent_volume(V, w)
+vs = V .* w;
 end
 
 % total mass finds the total mass of inspired air
@@ -240,40 +201,6 @@ n = (pp .* v) / (R * Ta);
 species_mass = n .* M;
 mass1 = sum(species_mass);
 end 
-
-function gasexchange2
-% composition of stream 8 will be calculated by gas exchange 1
-% mass flow rates of stream 8 will be calculated by gas exchange 1
-PO2alv = 104; %mmHg
-PCO2alv = 46; %mmHg
-MO2 = 31.9988;
-MCO2 = 44.0095;
-Tb = 310;
-dO2alv = density(PO2alv,MO2,Tb);
-dCO2alv = density(PCO2alv,MCO2,Tb);
-% calculates densities of O2 and CO2 in alveoli <-- is this constant during
-% transport across membrane??
-
-% v14 =
-% v15 =
-m14 = v14 * dO2alv;
-m15 = v15 * dCO2alv;
-% calculate mass flow rates from volumetric flow rates and densities
-
-m9O2 = m8O2 - m14;
-m9CO2 = m8CO2 + m15;
-% calculate mass flow rates of O2 and CO2 in stream 9
-% m8O2 and m8CO2 calculated in gas exchange 1
-
-m9 = m8 - m14 + m15;
-% mass flow rate of stream 9
-% mass flow rates of N2, H20, inert gases remains the same
-
-w9O2 = m9O2 / m9;
-w9CO2 = m9CO2 / m9;
-% mass fractions of O2 and CO2 in stream 9
-
-end
 
 % density calculates the density of a gas
 % P = pressure
@@ -368,6 +295,7 @@ function massflowrate = v2m(volumetricflowrate, density)
 massflowrate = volumetricflowrate*density;
 end
 
+<<<<<<< HEAD
 %calcuate mass flow rateswith regards to time
 %model diffusion over time
 %partial pressure change over time
@@ -376,38 +304,83 @@ end
 %humid calculates volume percentage in humidfied air
 
 %humidity function calculates the volume percentages of the air constiuents
+=======
+
+%humid function calculates the volume percentages of the air constiuents
+>>>>>>> 5b6e1d36e532b6671af5f670de01c1173a77a519
 %after is has been humidified to 100%
-%vper_i=volume percentages of air in stream before it is humidified
+%h_i= initial relative humidity of air when inspired
+%m_i=initial amount of water in air when inspired (mg)
+%m_f=final amount of water in air after humdidification (mg)
+%water_added=total amount of water added to air when it is humidified (mg)
+%mass_tot1=total mass of gas before humidified (mg)
+%mass_tot2= total mass of gas after humidified (mg)
+%w_i= initial mass fractions of gas constiuents before humidified
+%mass_i=amount of each consituent in inhaled air (mg)
+%mass_f=amount of each consituent in humidified air (mg)
+%w_f= mass fractions of gas constituents after humidified
+%vper_1=volume percentages of air in stream before it is humidified
 %vper_h= volume percentages of air after it is humidified
-%vtot= volume of air before humdified
-%h_p= initial relative humidity of air when inspired
-%w_i=initial amount of water in air when inspired (mg/L)
-%w_f=final amount of water in air after humdidification (mg/L)
-%after they have been humidified in the lungs
-%vtot2=new volume of air after hudified
-function vper_h=humid(vper_i,vtot,h_p)
-vfrac = vper_i ./ 100;
-v = vfrac * vtot;
-w_i=4.5;   %based on 24 degrees Celsius, what temp value are we assuming for air before it is inhaled?
-w_f=22;    %based on 100% humidity at 37 degrees Celsius
-amount_of_water_added=w_f-w_i;
-vtot2=vtot+amount_of_water_added;
-v(4)=v(4)+ amount_of_water_added;   %amount of water in inspired gas after it has been humidified
-vper_h= v ./ vtot2;
+%vtot= volume of air inhaled- 0.5 L in this model
+
+function vper_h=humid(h_i,vtot,vper1,M)
+m_i=(0.18*h_i)*vtot;
+%at 24 degrees Celsius, amount of water in air before humidified (mg), at 50% humidity
+m_f=22;
+%at 37 degrees Celsius, amount of water in air after humidified (mg), at 100% humidity
+water_added=m_f-m_i;
+density=1184; 
+%density of inhaled air (mg/L)
+mass_tot1=density*vtot;
+%total mass of inhaled air (mg)
+mass_tot2=mass_tot1+water_added;
+%total mass of humidifed air (mg)
+w_i=massfrac(vper1,M);   
+%finds mass fractions of all constituents of inhaled air in Stream 1
+mass_i=w_i.*mass_tot1;  
+%finds amount of each consituent in inhaled air (mg)
+mass_f=mass_i;
+%creates variable to hold mass amounts of all consituents after humidified
+mass_f(4)=mass_f(4)+ water_added;  
+%amount of water in inspired gas after it has been humidified (mg)
+w_f= mass_f ./ mass_tot2; 
+%finds mass fractions of all constituents of air after humidified
+vper_h=volumepercentage(mass_f,M);
 end
 
-%calculates respiration frequency in breaths per minute for males
+%volumepercentage function calculates the volume percentages of constituents in a stream 
+%based on the amounts of each constituent (in mg)
+%mass_f=mass of all constitiuents (mg)
+%M= molar masses of all constituents (g/mol)
+%v_fracf=volumetric fractions of all gas constituents after humidified
+%vper_f= volume percentages of all gas constituents after humidified
+function vper_f=volumepercentage(mass_f,M)
+nratio=(mass_f/1000)./M;  
+%calculates number of moles of all gas constituents after humidified
+nratio_sum= sum(nratio);  
+%calculates sum of all moles of gas after humidified
+v_fracf= nratio./nratio_sum;  
+%calculates volumetric fractions (which are equal to mole fractions)
+vper_f=vfrac_f.*100;  
+%finds volume percentages of gas after humidified
+end
+
+% calculates respiration frequency in breaths per minute
 % H = height in meters
 % W = weight in kilograms
 % RFin = respiration frequency for inspiration
 % RFex = respiration frequency for expiration
+
 function [RFin, RFex] = RF(H,W)
 RFin = 55.55 - 32.86*H + 0.2602*W;
 RFex = 77.03 - 45.42*H + 0.2373*W;
 end
 
-% calculates volumetric flow rate of inspiration or expiration based on
-% breathing frequency
+% calculates volumetric flow rate of inspiration or expiration
+% RF = breathing frequency
+% TV = tidal volume
+% t = time
+
 function vflow = volumetricflow(RF,TV,t)
 vflow = (pi*RF*TV)/60 * sin(pi*RF*t/30);
 end
@@ -415,6 +388,9 @@ end
 % calculates the pressure in the alveoli with respect to time
 % Raw = airway resistance
 % Pb = baromatic pressure
+% vflow = the volumetric flow rate of air (either inspiratory or expiratory
+% flow rate, depending on the time)
+
 function Pav = alveolarpressure(vflow)
 % Raw = 
 Pb = 760; % mmHg
@@ -425,13 +401,18 @@ end
 Pav = vflow * Raw + Pb;
 end
 
-% I couldn't figure out how to integrate when solving for a variable within
-% the integral, so I worked the integral out by hand for now
+% deadspace_expfraction calculates the fraction x of the expired air flow
+% rate that comes from the deadspace
 % deadvol = the volume of air the dead space contains
+% Integral of the (x * [equation for expiratory flow rate]) with bounds 0 
+% to texp equals deadvol
+% Solves this equation for x
+
 function x = deadspace_expfrac(TV,RFex,texp)
 deadvol = 0.3 * TV;
 x = 2*deadvol/TV * (1 / (1 - cos(pi*RFex*texp/30)));
 end
+<<<<<<< HEAD
  
 % VA = alveolar volume
 % PP_O2_humid = partial pressure of O2 in humidifed inspired air
@@ -490,3 +471,5 @@ title('Volume of Alveoli Over One Respiratory Cycle')
 
 end
 
+=======
+>>>>>>> 5b6e1d36e532b6671af5f670de01c1173a77a519
