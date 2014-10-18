@@ -13,11 +13,11 @@ TV = 0.5; % liters
 H = 1.73; % height in meters of standard man
 W = 68; % weight in kilograms of standard man
 
-PP2 = [116.0 32.0 47.0 565.0];
+PP2 = [116.0 32.0 565.0 47.0];
 % partial pressures in expired air
 PP1 = [158.0 0.3 596.0 5.7]; 
 % partial pressures in inspired air
-PP7 = [100.0 40.0 47.0 573.0];
+PP7 = [100.0 40.0 573.0 47.0];
 % partial pressures in alveolar air
 
 vfrac2 = PP2 ./ 760;
