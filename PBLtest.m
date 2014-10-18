@@ -594,3 +594,54 @@ plot(resp_range,Vav)
 title('Volume of Alveoli Over One Respiratory Cycle')
 
 end
+
+%calculates the volume compositions of each constituent in the gas in each
+%unit
+function partial_vol= volume(vper1)
+pp=zeros(4,8);
+%creates variable to hold the partial pressures for all gas constituents in
+%each unit during respiration
+sum_vper1=sum(vper1);
+vper1_frac=vper1./sum_vper1;
+pp(1,:)=[vper1_frac*760];%partial pressures for entry box during inspiration (mmHg)
+pp(2,:)=[ppf_O2 ppf_CO2 ppf_N2 ppf_H2O];
+%partial pressures for entry box during expiration (mmHg)
+pp(3,:)=[ppi_O2 ppi_CO2 ppi_N2 ppi_H2O];
+%partial pressures for dead space box during inspiration (mmHg)
+pp(4,:)=[ppf_O2 ppf_CO2 ppf_N2 ppf_H2O];
+%partial pressures for dead space box during expiration (mmHg)
+pp(5,:)=[ppi_O2 ppi_CO2 ppi_N2 ppi_H2O];
+%partial pressures for gas exchange box during inspiration (mmHg)
+pp(6,:)=[ppf_O2 ppf_CO2 ppf_N2 ppf_H2O];
+%partial pressures for gas exchange box during expiration (mmHg)
+pp(7,:)=[ppi_O2 ppi_CO2 ppi_N2 ppi_H2O];
+%partial pressures for cappilaries box during inspiration (mmHg)
+pp(8,:)=[ppf_O2 ppf_CO2 ppf_N2 ppf_H2O];
+%partial pressures for cappilaries box during expiration (mmHg)
+vol=[29.6 150 65 3000];
+%total volume of each unit (mL)
+sum_pressures=zeros(8,1);
+pp_frac=zeros(8,4);
+%finds the partial pressure fractions
+for i=1:8
+    sum_pressures(i)=sum(pp(i,:));
+end
+for i=1:8
+    for j=1:4
+        pp_frac(i,j)=pp(i,j)/sum_pressures(i);
+    end
+end
+partial_vol=volume_calcs(vol,pp_frac);
+
+end
+
+%performs the actual calculations to find partial volume of each gas
+%constituent in each unit
+function partial_vol= volume_calcs(vol,pp_frac)
+for i=1:8
+        for j=1:4
+             partial_vol(i,j)=pp_frac(i,j)*vol(i);
+        end
+    
+end
+end
