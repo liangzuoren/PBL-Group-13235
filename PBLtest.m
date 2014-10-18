@@ -1,3 +1,4 @@
+
 function PBLtest
 entry
 % blood
@@ -39,11 +40,8 @@ tin = 30/RFin;
 % inspiration
 texp = 30/RFex;
 % RFex is number of breaths per minute, divide by 2 to get number of
-% exspirations per minute and then multiply by 60s/1min to get time of
-% exspiration
-
-%t_bh = ??? breathhold time
-
+% expirations per minute and then multiply by 60s/1min to get time of
+% expiration
 tresp = tin + texp; % + t_bh
 % sum of inspiration, breathold, and expiration times is the time of one 
 % full respiraory cycle
@@ -54,7 +52,6 @@ resp_range = 0:0.01:tresp;
 index_in = length(insp_range);
 index_exp = length(exp_range);
 index_resp = length(resp_range);
-
 for i = 1:index_in
     vflow1_in(i) = -volumetricflow(RFin,TV,insp_range(i));
     % volumetric flow rate for inspiration in L/s
@@ -230,9 +227,43 @@ function d = density(P,M,T)
 R = 62.3637; % if units chosen are mmHg, L, and K
 d = (M * P) / (T * R);
 end
-
+%{
 %PV=nRT
 %R=62.36 (L*mmHg)(mol*K)
+
+<<<<<<< HEAD
+% BTP values assumed for function deadspace and function gas_exchange_1
+function values_ds= deadspace(n2,nCO2,nN2,nH2O)
+DSV=0.30*TV;   %30% of the total inhaled air goes to dead space
+VO2=(nO2*62.36*310)/149.3;  %partial volume of O2 during both inhalation and exhalation
+VCO2=(nCO2*62.36*310)/0.3;  %partial volume of CO2 during both inhalation and exhalation
+VN2=(nN2*62.36*310)/563.4;  %partial volume of N2 during both inhalation and exhalation
+VH2O=(nH2O*62.36*310)/47;   %partial volume of H2O during both inhalation and exhalation
+values_ds=[VO2 VCO2 VN2 VH2O];  %partial volumes for deadspace unit
+A: m3-m4=0;  %total mass flow rate equation
+m3w3,CO2-m4w4,CO2=0;  %mass flow rate equation for CO2
+m3w3,O2-m4w4,O2=0; %mass flow rate equation for O2
+m3w3,N2-m4w4,N2=0; %mass flow rate equation for N2
+m3w3,H2O-m4w4,H2O=0; %mass flow rate equation for H2O
+end
+
+function values_ge1= gas_exchange_1(nO2_i,nCO2_i,nO2_f,nCO2_f,nN2,nH2O)
+ge1v=0.70*tv; %70% of the total inhaled air goes to the gas exchange 1 box
+VO2_i=(nO2_i*62.36*310)/149.3;  %partial volume of O2 during inhalation
+VCO2_i=(nCO2_i*62.36*310)/0.3; %partial volume of CO2 during inhalation
+VO2_f=(nO2_f*62.36*310)/120; %partial volume of O2 during exhalation
+VCO2_f=(nCO2_f*62.36*310)/27;  %partial volume of CO2 during exhalation
+VN2_i=(nN2*62.36*310)/563.4; %partial volume of N2 during exhalation
+VN2_f=(nN2*62.36*310)/566; %partial volume of N2 during exhalation
+VH2O=(nH2O*62.36*310)/47;  %partial volume of H2O during both inhalation and exhalation
+values_ge1=[VO2_i VCO2_i VO2_f VCO2_f VN2_i VN2_f VH2O];  %partial volumes for gas exchange 1 unit
+Total: m5+m8+m10-m6-m7-m9=0;  %total mass flow rate equation
+m10w10,CO2+m8w8,CO2-m6w6,CO2=0;  %mass flow rate equation for CO2
+m5w5,O2-m9w9,O2-m7w7,O2=0;  %mass flow rate equation for O2
+m5w5,N2-m6w6,N2=0;  %mass flow rate equation for N2
+m5w5,H2O-m6w6,H2O=0;  %mass flow rate equation for H2O
+end
+%}
 
 % % BTP values assumed for function deadspace and function gas_exchange_1
 % function values_ds= deadspace(n2,nCO2,nN2,nH2O)
@@ -266,18 +297,94 @@ end
 % m5w5,H2O-m6w6,H2O=0;  %mass flow rate equation for H2O
 % end
 
+
 %only for steady state
 function blood
-vO2inGE2 = 21; %ml/min/mm Hg
-vO2inGE1 = vO2inGE2/0.7*0.3;
-vCO2outGE2 = 451;
-vCO2outGE1 = vCO2outGE2/0.7*0.3;
-vO2outblood = VO2inGE1 + VO2inGE2;
-vCO2inblood = VCO2outGE1 + VCO2outGE2;
+%vO2inGE2 = 21; %ml/min/mm Hg
+%vO2inGE1 = vO2inGE2/0.7*0.3;
+%vCO2outGE2 = 451;
+%vCO2outGE1 = vCO2outGE2/0.7*0.3;
+%vO2outblood = vO2inGE1 + vO2inGE2;
+%vCO2inblood = vCO2outGE1 + vCO2outGE2;
+tin = 30/RFin;
+% RFin is number of breaths per minute, divide by 2 to get number of
+% inspirations per minute and then multiply by 60s/1min to get time of
+% inspiration
+texp = 30/RFex;
+% RFex is number of breaths per minute, divide by 2 to get number of
+% exspirations per minute and then multiply by 60s/1min to get time of
+% exspiration
+tresp = tin + texp;
+% calculates length of time per inspiration and expiration from breathing
+% frequencies
+PaO2i = 100;%100 mmHg partial pressure in beginning for O2
+PaCO2i = 40;%40 mmHg partial pressure in beginning for CO2
+Patm = 760; 
+PH2O = 47;%presures taken from diagram in assumed values
+PN2 = 573;
+
+DifCapO2 = 21; %mL/min/mmHg
+DifCapCO2 = 400; %mL/min/mmHg
 
 dO2 =  density(1, 31.9988, 310); %1 atm, 31.9988 g/mol, 310 K(body temperature)
 dCO2 = density(1, 44.0095, 310); %1 atm, 44.0095 g/mol, 310 K(body temperature)
 
+
+for x=0:1 %modeling 1 breath
+    t=0;
+    PaO2alveoli = PaO2i;
+    PaCO2alveoli = PaCO2i;
+    trange = 1;
+    tstep = 0.01;
+
+    while t>tin;
+        
+        difRateO2 = DifCapO2 * (PaO2alveoli - PaO2capillary);
+        difRateCO2 = DifCapCO2 * (PaCO2alveoli - PaCO2capillary);
+        mO2 = dO2*difRateO2;
+        mCO2 = dCO2*difRateCO2;
+        nO2 = mO2/31.9988;
+        nCO2 = mCO2/44.0095;
+        %PV=nRT, P = nRT/V
+        PaO2diff = nO2*tstep*62.36367*310/3; %gives pressure in mmHg
+        PaCO2diff = nCO2*tstep*62.36367*310/3;
+        PaO2alveoli = PaO2alveoli - PaO2diff;
+        PaCO2alveoli = PaCO2alveoli + PaCO2diff;
+        PaO2capillary = PaO2capillary - PaO2diff;
+        PaCO2capillary = PaCO2capillary - PaCO2diff;
+        
+        %mTotal = residualVolume + vflow6_in(trange)*dInspiredAir; %volumetric flow rate * density?
+        %PaO2alveoli = (PaO2alveoli * mTotal- mO2 )/ mTotal;%PaO2 = FiO2*(Patm - PH2O) - (PaCO2/RQ)
+        %PaO2capillary = 40;
+        %PaCO2alveoli = (PaCO2alveoli * mTotal - mCO2 )/ mTotal;
+        %PaCO2capillary = 46;
+        
+        t=t+tstep;
+        trange = trange+1;
+    end
+    
+    trange = 1;
+    
+    while t>texp
+        
+        difRateO2 = DifCapO2 * (PaO2alveoli - PaO2capillary);
+        difRateCO2 = DifCapCO2 * (PaCO2alveoli - PaCO2capillary);
+        mO2 = dO2*difRateO2;
+        mCO2 = dCO2*difRateCO2;
+        %mTotal = residualVolume + vflow7_ex(trange)*dAir;
+        PaO2alveoli = (PaO2alveoli * mTotal- mO2 )/ mTotal;
+        PaO2capillary = 40;
+        PaCO2alveoli = (PaCO2alveoli * mTotal - mCO2 )/ mTotal;
+        PaCO2capillary = 46;
+        
+        t=t+tstep;
+        trange = trange+1;
+    end
+    
+end
+
+
+%{
 [mCO2outGE1, mO2inGE1] = bloodGE1(vCO2outGE1, vO2inGE1, dO2, dCO2) ;
 [mCO2outGE2, mO2inGE2] = bloodGE2(vCO2outGE2, vO2inGE2, dO2, dCO2);
 [mCO2inSurroundings, mO2outSurroundings] = bloodSurroundings(vCO2inSurr, vO2outSurr, dO2, dCO2);
@@ -285,11 +392,13 @@ dCO2 = density(1, 44.0095, 310); %1 atm, 44.0095 g/mol, 310 K(body temperature)
 mCO2in = mCO2inSurroundings; %adding up all the mass flow rates of streams bringing CO2 in
 mCO2out = mCO2outGE1 + mCO2outGE2; %adding up all the mass flow rates of streams bringing CO2 out
 mO2in = mO2inGE1 + mO2inGE2; %adding up all the mass flow rates of streams bringing O2 in
-mO2out = mO2outSurroundings; %adding up all the mass flor rates of streams bringing O2 out
+mO2out = mO2outSurroundings; %adding up all the mass flow rates of streams bringing O2 out
 
-blood = [mO2in mCO2in mO2out mCO2out]; %blood box = mass flow rate 
-return
+mBlood = [mO2in mCO2in mO2out mCO2out]; %blood box = mass flow rate 
+
 end
+
+
 
 function [mCO2in, mO2out] = bloodGE1(vCO2, vO2, dO2, dCO2)
 mCO2in = v2m(vCO2 , dCO2);
@@ -309,10 +418,21 @@ end
 %this function converts volumetric flow rate to mass flow rate
 function massflowrate = v2m(volumetricflowrate, density)
 massflowrate = volumetricflowrate*density;
+%}
 end
+
+%calcuate mass flow rateswith regards to time
+%model diffusion over time
+%partial pressure change over time
+%
+%
+%humid calculates volume percentage in humidfied air
+
+%humidity function calculates the volume percentages of the air constiuents
 
 
 %humid function calculates the volume percentages of the air constiuents
+
 %after is has been humidified to 100%
 %h_i= initial relative humidity of air when inspired
 %m_i=initial amount of water in air when inspired (mg)
@@ -399,10 +519,11 @@ end
 function Pav = alveolarpressure(vflow)
 Raw = 1.41 / 1.36; % 1.36 is conversion factor to convert cmH2O to mmHg
 Pb = 760; % mmHg
-Pav = vflow * Raw + Pb;
+Pav = vflow1 * Raw + Pb;
 end
 
-% deadspace_expfraction calculates the fraction of the expired air flow
+
+% deadspace_expfraction calculates the fraction x of the expired air flow
 % rate that comes from the deadspace
 % deadvol = the volume of air the dead space contains
 % Integral of the (x * [equation for expiratory flow rate]) with bounds 0 
@@ -413,4 +534,55 @@ end
 function x = deadspace_expfrac(TV,RFex,texp)
 deadvol = 0.3 * TV;
 x = 2*deadvol/TV * (1 / (1 - cos(pi*RFex*texp/30)));
+end
+ 
+%calculates the volume compositions of each constituent in the gas in each
+%unit
+function partial_vol= volume(vper1)
+pp=zeros(4,8);
+%creates variable to hold the partial pressures for all gas constituents in
+%each unit during respiration
+sum_vper1=sum(vper1);
+vper1_frac=vper1./sum_vper1;
+pp(1,:)=[vper1_frac*760];%partial pressures for entry box during inspiration (mmHg)
+pp(2,:)=[ppf_O2 ppf_CO2 ppf_N2 ppf_H2O];
+%partial pressures for entry box during expiration (mmHg)
+pp(3,:)=[ppi_O2 ppi_CO2 ppi_N2 ppi_H2O];
+%partial pressures for dead space box during inspiration (mmHg)
+pp(4,:)=[ppf_O2 ppf_CO2 ppf_N2 ppf_H2O];
+%partial pressures for dead space box during expiration (mmHg)
+pp(5,:)=[ppi_O2 ppi_CO2 ppi_N2 ppi_H2O];
+%partial pressures for gas exchange box during inspiration (mmHg)
+pp(6,:)=[ppf_O2 ppf_CO2 ppf_N2 ppf_H2O];
+%partial pressures for gas exchange box during expiration (mmHg)
+pp(7,:)=[ppi_O2 ppi_CO2 ppi_N2 ppi_H2O];
+%partial pressures for cappilaries box during inspiration (mmHg)
+pp(8,:)=[ppf_O2 ppf_CO2 ppf_N2 ppf_H2O];
+%partial pressures for cappilaries box during expiration (mmHg)
+vol=[29.6 150 65 3000];
+%total volume of each unit (mL)
+sum_pressures=zeros(8,1);
+pp_frac=zeros(8,4);
+%finds the partial pressure fractions
+for i=1:8
+    sum_pressures(i)=sum(pp(i,:));
+end
+for i=1:8
+    for j=1:4
+        pp_frac(i,j)=pp(i,j)/sum_pressures(i);
+    end
+end
+partial_vol=volume_calcs(vol,pp_frac);
+
+end
+
+%performs the actual calculations to find partial volume of each gas
+%constituent in each unit
+function partial_vol= volume_calcs(vol,pp_frac)
+for i=1:8
+        for j=1:4
+             partial_vol(i,j)=pp_frac(i,j)*vol(i);
+        end
+    
+end
 end
