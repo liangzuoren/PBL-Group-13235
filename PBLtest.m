@@ -17,7 +17,7 @@ PP2 = [116.0 32.0 565.0 47.0];
 % partial pressures in expired air
 PP1 = [158.0 0.3 596.0 5.7]; 
 % partial pressures in inspired air
-PP7 = [100.0 40.0 47.0 573.0];
+PP7 = [100.0 40.0 573.0 47.0];
 % partial pressures in alveolar air
 
 vfrac2 = PP2 ./ 760;
@@ -25,8 +25,8 @@ vfrac1 = PP1 ./ 760;
 vfrac7 = PP7 ./ 760;
 % calculates the volume fractions of the constituents from the partial
 % pressures
-vfrac4 = humid(50,TV,vper1,M);
-% calculates composition of humidified air
+vper4 = humid(vper_1,0.5,50);
+% calculates composition after humidification in Entry unit
 vfrac6 = vfrac4;
 % the compositions of stream 6 and 4 are equal because stream 4 is
 % the only inlet stream and stream 6 is the only outlet stream of the dead 
