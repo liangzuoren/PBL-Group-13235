@@ -1,7 +1,7 @@
 
 function PBLtest
 entry
-% blood
+blood
 end
 
 %Entry box is where inhaled air is humidified and exhaled air leaves the
@@ -228,7 +228,6 @@ end
 %PV=nRT
 %R=62.36 (L*mmHg)(mol*K)
 
-<<<<<<< HEAD
 % BTP values assumed for function deadspace and function gas_exchange_1
 function values_ds= deadspace(n2,nCO2,nN2,nH2O)
 DSV=0.30*TV;   %30% of the total inhaled air goes to dead space
@@ -261,7 +260,7 @@ m5w5,N2-m6w6,N2=0;  %mass flow rate equation for N2
 m5w5,H2O-m6w6,H2O=0;  %mass flow rate equation for H2O
 end
 %}
-=======
+
 % % BTP values assumed for function deadspace and function gas_exchange_1
 % function values_ds= deadspace(n2,nCO2,nN2,nH2O)
 % DSV=0.30*TV;   %30% of the total inhaled air goes to dead space
@@ -294,9 +293,12 @@ end
 % m5w5,H2O-m6w6,H2O=0;  %mass flow rate equation for H2O
 % end
 
->>>>>>> 2d8d7a7be0bac1bf8502dd10b937674f62af4cdd
 %only for steady state
 function blood
+H = 1.73; % height in meters of standard man
+W = 68; % weight in kilograms of standard man
+TV = 0.5; % liters
+[RFin,RFex] = RF(H,W);
 %vO2inGE2 = 21; %ml/min/mm Hg
 %vO2inGE1 = vO2inGE2/0.7*0.3;
 %vCO2outGE2 = 451;
@@ -331,10 +333,16 @@ for x=0:1 %modeling 1 breath
     t=0;
     PaO2alveoli = PaO2i;
     PaCO2alveoli = PaCO2i;
+    PaO2capillary = 40;
+    PaCO2capillary = 46;
+    
     trange = 1;
     tstep = 0.01;
 
-    while t>tin;
+    while t<tin;
+        
+        mO2in = vflow6_in;
+        mCO2in = vflow6_in;
         
         difRateO2 = DifCapO2 * (PaO2alveoli - PaO2capillary);
         difRateCO2 = DifCapCO2 * (PaCO2alveoli - PaCO2capillary);
@@ -346,15 +354,11 @@ for x=0:1 %modeling 1 breath
         PaO2diff = nO2*tstep*62.36367*310/3; %gives pressure in mmHg
         PaCO2diff = nCO2*tstep*62.36367*310/3;
         PaO2alveoli = PaO2alveoli - PaO2diff;
-        PaCO2alveoli = PaCO2alveoli + PaCO2diff;
-        PaO2capillary = PaO2capillary - PaO2diff;
-        PaCO2capillary = PaCO2capillary - PaCO2diff;
+        PaCO2alveoli = PaCO2alveoli - PaCO2diff;
         
         %mTotal = residualVolume + vflow6_in(trange)*dInspiredAir; %volumetric flow rate * density?
         %PaO2alveoli = (PaO2alveoli * mTotal- mO2 )/ mTotal;%PaO2 = FiO2*(Patm - PH2O) - (PaCO2/RQ)
-        %PaO2capillary = 40;
         %PaCO2alveoli = (PaCO2alveoli * mTotal - mCO2 )/ mTotal;
-        %PaCO2capillary = 46;
         
         t=t+tstep;
         trange = trange+1;
@@ -362,18 +366,20 @@ for x=0:1 %modeling 1 breath
     
     trange = 1;
     
-    while t>texp
-        
+    while t<texp
+        mO2out = vflow7_ex;
+        mCO2out = vflow7_ex;
         difRateO2 = DifCapO2 * (PaO2alveoli - PaO2capillary);
         difRateCO2 = DifCapCO2 * (PaCO2alveoli - PaCO2capillary);
         mO2 = dO2*difRateO2;
         mCO2 = dCO2*difRateCO2;
-        %mTotal = residualVolume + vflow7_ex(trange)*dAir;
-        PaO2alveoli = (PaO2alveoli * mTotal- mO2 )/ mTotal;
-        PaO2capillary = 40;
-        PaCO2alveoli = (PaCO2alveoli * mTotal - mCO2 )/ mTotal;
-        PaCO2capillary = 46;
-        
+        nO2 = mO2/31.9988;
+        nCO2 = mCO2/44.0095;
+        %PV=nRT, P = nRT/V
+        PaO2diff = nO2*tstep*62.36367*310/3; %gives pressure in mmHg
+        PaCO2diff = nCO2*tstep*62.36367*310/3;
+        PaO2alveoli = PaO2alveoli - PaO2diff;
+        PaCO2alveoli = PaCO2alveoli + PaCO2diff;
         t=t+tstep;
         trange = trange+1;
     end
@@ -516,7 +522,7 @@ end
 function Pav = alveolarpressure(vflow)
 Raw = 1.41 / 1.36; % 1.36 is conversion factor to convert cmH2O to mmHg
 Pb = 760; % mmHg
-Pav = vflow1 * Raw + Pb;
+Pav = vflow * Raw + Pb;
 end
 
 
