@@ -6,28 +6,33 @@ end
 %Entry box is where inhaled air is humidified and exhaled air leaves the
 %body from
 function entry
-PP2 = [116.0 32.0 47.0 565.0];
+M = [31.9988 44.0095 28.01348 33.00674];
+% M = molar mass of each constituent
+TV = 0.5; % liters
+H = 1.73; % height in meters of standard man
+W = 68; % weight in kilograms of standard man
+
+PP2 = [116.0 32.0 565.0 47.0];
 % partial pressures in expired air
-PP4 = [158.0 0.3 596.0 5.7]; 
-% partial pressures in stream 4, humidified air
+PP1 = [158.0 0.3 596.0 5.7]; 
+% partial pressures in inspired air
 PP7 = [100.0 40.0 47.0 573.0];
 % partial pressures in alveolar air
+
 vfrac2 = PP2 ./ 760;
-vfrac4 = PP4 ./ 760;
+vfrac1 = PP1 ./ 760;
 vfrac7 = PP7 ./ 760;
 % calculates the volume fractions of the constituents from the partial
 % pressures
+vfrac4 = humid(50,TV,vper1,M);
+% calculates composition of humidified air
 vfrac6 = vfrac4;
-
-% vper4 = humid(vper_1,0.5,50);
-% % calculates composition after humidification in Entry unit, or can we get
-% % these values from research?
-
-
-H = 1.73; % height in meters of standard man
-W = 68; % weight in kilograms of standard man
-TV = 0.5; % liters
+% the compositions of stream 6 and 4 are equal because stream 4 is
+% the only inlet stream and stream 6 is the only outlet stream of the dead 
+% space unit, and there are no reactions
 [RFin,RFex] = RF(H,W);
+% RF calculates the respiration frequencies for inspiration and expiration 
+% based on height and weight
 tin = 30/RFin;
 % RFin is number of breaths per minute, divide by 2 to get number of
 % inspirations per minute and then multiply by 60s/1min to get time of
@@ -36,15 +41,20 @@ texp = 30/RFex;
 % RFex is number of breaths per minute, divide by 2 to get number of
 % exspirations per minute and then multiply by 60s/1min to get time of
 % exspiration
-tresp = tin + texp;
-% calculates length of time per inspiration and expiration from breathing
-% frequencies
+
+%t_bh = ??? breathhold time
+
+tresp = tin + texp; % + t_bh
+% sum of inspiration, breathold, and expiration times is the time of one 
+% full respiraory cycle
+
 insp_range = 0:0.01:tin;
 exp_range = 0:0.01:texp;
 resp_range = 0:0.01:tresp;
 index_in = length(insp_range);
 index_exp = length(exp_range);
 index_resp = length(resp_range);
+
 for i = 1:index_in
     vflow1_in(i) = -volumetricflow(RFin,TV,insp_range(i));
     % volumetric flow rate for inspiration in L/s
@@ -128,8 +138,7 @@ ylabel('Volumetric Flow Rate (L/s)')
     % resp_range,vflow11)
 % title('Volumetric Flow Rate for O2 and CO2 Diffusion')
 
-M = [31.9988 44.0095 28.01348 33.00674];
-% M = molar mass of each constituent
+
 
 % w = massfrac(vper,M);
 % % w = the mass fraction of each constituent in each stream
@@ -393,12 +402,13 @@ Pb = 760; % mmHg
 Pav = vflow * Raw + Pb;
 end
 
-% deadspace_expfraction calculates the fraction x of the expired air flow
+% deadspace_expfraction calculates the fraction of the expired air flow
 % rate that comes from the deadspace
 % deadvol = the volume of air the dead space contains
 % Integral of the (x * [equation for expiratory flow rate]) with bounds 0 
 % to texp equals deadvol
-% Solves this equation for x
+% Solves this equation for x, the fraction of the expired air flow rate
+% that comes from the deadspace
 
 function x = deadspace_expfrac(TV,RFex,texp)
 deadvol = 0.3 * TV;
