@@ -1,21 +1,29 @@
 
 function PBLtest
 entry
-blood
+% blood
 end
 
 %Entry box is where inhaled air is humidified and exhaled air leaves the
 %body from
 function entry
-vper1 = [vper1O2 vper1CO2 vper1N2 vper1H2O];
-vper2 = [vper2O2 vper2CO2 vper2N2 vper2H2O];
-% vper1 and vper2 from research
-vper4 = humid(vper_1,0.5,50);
-% calculates composition after humidification in Entry unit, or can we get
-% these values from research?
-vper5 = vper4;
-vper6 = vper4;
-% composition of streams 4, 5, and 6 equal because Entry unit is splitter
+PP2 = [116.0 32.0 47.0 565.0];
+% partial pressures in expired air
+PP4 = [158.0 0.3 596.0 5.7]; 
+% partial pressures in stream 4, humidified air
+PP7 = [100.0 40.0 47.0 573.0];
+% partial pressures in alveolar air
+vfrac2 = PP2 ./ 760;
+vfrac4 = PP4 ./ 760;
+vfrac7 = PP7 ./ 760;
+% calculates the volume fractions of the constituents from the partial
+% pressures
+vfrac6 = vfrac4;
+
+% vper4 = humid(vper_1,0.5,50);
+% % calculates composition after humidification in Entry unit, or can we get
+% % these values from research?
+
 
 H = 1.73; % height in meters of standard man
 W = 68; % weight in kilograms of standard man
@@ -45,8 +53,8 @@ for i = 1:index_in
     % volumetric flow rate for inspiration in L/s
     % airflow into body defined as negative direction
     
-    vflow4_in(i) = -0.3 * vflow1_in(i);
-    vflow6_in(i) = -0.7 * vflow1_in(i);
+    vflow4_in(i) = vflow1_in(i);
+    vflow6_in(i) = 0.7 * vflow1_in(i);
     % entry unit is splitter, 30% of flow to Dead Space and 70% to Gas Exchange
 
     % calculate vflow3_in somehow...
@@ -64,8 +72,8 @@ for i = 1:index_exp
     vflow2_ex(i) = volumetricflow(RFex,TV,exp_range(i));
     % volumetric flow rate for expiration in L/s
     x = deadspace_expfrac(TV,RFex,texp);
-    vflow5_ex(i) = x*vflow2_ex(i);
-    vflow7_ex(i) = vflow2_ex(i) - vflow5_ex(i);
+    vflow5_ex(i) = vflow2_ex(i);
+    vflow7_ex(i) = vflow5_ex(i) - x*vflow2_ex(i);
     
     Pav_ex(i) = alveolarpressure(vflow2_ex(i));
     % calculates alveolar pressure with respect to time during expiration
@@ -118,32 +126,32 @@ plot(resp_range,vflow1,resp_range,vflow2,resp_range,vflow4,resp_range,...
 title('Volumetric Flow Rates of Streams 1, 2, 4, 5, 6, and 7')
 xlabel('Time (s)')
 ylabel('Volumetric Flow Rate (L/s)')
-figure
-plot(resp_range,vflow8,resp_range,vflow10,resp_range,vflow9, ...
-    resp_range,vflow11)
-title('Volumetric Flow Rate for O2 and CO2 Diffusion')
+% figure
+% plot(resp_range,vflow8,resp_range,vflow10,resp_range,vflow9, ...
+    % resp_range,vflow11)
+% title('Volumetric Flow Rate for O2 and CO2 Diffusion')
 
-M1 = [31.9988 44.0095 28.01348 33.00674];
+M = [31.9988 44.0095 28.01348 33.00674];
 % M = molar mass of each constituent
 
-w = massfrac(vper,M);
-% w = the mass fraction of each constituent in each stream
+% w = massfrac(vper,M);
+% % w = the mass fraction of each constituent in each stream
 
-mass1 = totalmass(TV,vper1,M1);
+% mass1 = totalmass(TV,vper1,M);
 % mass1 = the total mass of inspired air
 
-vs = constituent_volume(V,w);
-% calculates volume of constituents in a unit
+% vs = constituent_volume(V,w);
+% % calculates volume of constituents in a unit
 
 % calculate m3
 % can do so based on m1H2O and m6H2O
 
-c = 1005;
-Tb = 310; % body temperature
-Ta = 288; % inspired air temperature
-Q16 = thermal(mass1,c,Ta,Tb);
-Q17 = thermal(mass1,c,Tb,Ta);
-% calculates transfer of thermal energy in streams 16 and 17
+% c = 1005;
+% Tb = 310; % body temperature
+% Ta = 288; % inspired air temperature
+% Q12 = thermal(mass1,c,Ta,Tb)
+% Q13 = thermal(mass1,c,Tb,Ta)
+% % calculates transfer of thermal energy in streams 12 and 13
 end
 
 % thermal calculates thermal energy flow rate
@@ -220,6 +228,7 @@ end
 %PV=nRT
 %R=62.36 (L*mmHg)(mol*K)
 
+<<<<<<< HEAD
 % BTP values assumed for function deadspace and function gas_exchange_1
 function values_ds= deadspace(n2,nCO2,nN2,nH2O)
 DSV=0.30*TV;   %30% of the total inhaled air goes to dead space
@@ -252,6 +261,40 @@ m5w5,N2-m6w6,N2=0;  %mass flow rate equation for N2
 m5w5,H2O-m6w6,H2O=0;  %mass flow rate equation for H2O
 end
 %}
+=======
+% % BTP values assumed for function deadspace and function gas_exchange_1
+% function values_ds= deadspace(n2,nCO2,nN2,nH2O)
+% DSV=0.30*TV;   %30% of the total inhaled air goes to dead space
+% VO2=(nO2*62.36*310)/149.3;  %partial volume of O2 during both inhalation and exhalation
+% VCO2=(nCO2*62.36*310)/0.3;  %partial volume of CO2 during both inhalation and exhalation
+% VN2=(nN2*62.36*310)/563.4;  %partial volume of N2 during both inhalation and exhalation
+% VH2O=(nH2O*62.36*310)/47;   %partial volume of H2O during both inhalation and exhalation
+% values_ds=[VO2 VCO2 VN2 VH2O];  %partial volumes for deadspace unit
+% A: m3-m4=0;  %total mass flow rate equation
+% m3w3,CO2-m4w4,CO2=0;  %mass flow rate equation for CO2
+% m3w3,O2-m4w4,O2=0; %mass flow rate equation for O2
+% m3w3,N2-m4w4,N2=0; %mass flow rate equation for N2
+% m3w3,H2O-m4w4,H2O=0; %mass flow rate equation for H2O
+% end
+
+% function values_ge1= gas_exchange_1(nO2_i,nCO2_i,nO2_f,nCO2_f,nN2,nH2O)
+% ge1v=0.70*tv; %70% of the total inhaled air goes to the gas exchange 1 box
+% VO2_i=(nO2_i*62.36*310)/149.3;  %partial volume of O2 during inhalation
+% VCO2_i=(nCO2_i*62.36*310)/0.3; %partial volume of CO2 during inhalation
+% VO2_f=(nO2_f*62.36*310)/120; %partial volume of O2 during exhalation
+% VCO2_f=(nCO2_f*62.36*310)/27;  %partial volume of CO2 during exhalation
+% VN2_i=(nN2*62.36*310)/563.4; %partial volume of N2 during exhalation
+% VN2_f=(nN2*62.36*310)/566; %partial volume of N2 during exhalation
+% VH2O=(nH2O*62.36*310)/47;  %partial volume of H2O during both inhalation and exhalation
+% values_ge1=[VO2_i VCO2_i VO2_f VCO2_f VN2_i VN2_f VH2O];  %partial volumes for gas exchange 1 unit
+% Total: m5+m8+m10-m6-m7-m9=0;  %total mass flow rate equation
+% m10w10,CO2+m8w8,CO2-m6w6,CO2=0;  %mass flow rate equation for CO2
+% m5w5,O2-m9w9,O2-m7w7,O2=0;  %mass flow rate equation for O2
+% m5w5,N2-m6w6,N2=0;  %mass flow rate equation for N2
+% m5w5,H2O-m6w6,H2O=0;  %mass flow rate equation for H2O
+% end
+
+>>>>>>> 2d8d7a7be0bac1bf8502dd10b937674f62af4cdd
 %only for steady state
 function blood
 %vO2inGE2 = 21; %ml/min/mm Hg
@@ -471,7 +514,7 @@ end
 % flow rate, depending on the time)
 
 function Pav = alveolarpressure(vflow)
-% Raw = 
+Raw = 1.41 / 1.36; % 1.36 is conversion factor to convert cmH2O to mmHg
 Pb = 760; % mmHg
 Pav = vflow1 * Raw + Pb;
 end
