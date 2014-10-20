@@ -434,9 +434,8 @@ end
 
 
 %humid function calculates the volume percentages of the air constiuents
+%after is has been humidified from 50% (when inspired) to 100%
 
-%after is has been humidified to 100%
-%h_i= initial relative humidity of air when inspired
 %m_i=initial amount of water in air when inspired (mg)
 %m_f=final amount of water in air after humdidification (mg)
 %water_added=total amount of water added to air when it is humidified (mg)
@@ -450,9 +449,10 @@ end
 %vper_h= volume percentages of air after it is humidified
 %vtot= volume of air inhaled- 0.5 L in this model
 
-function vper_h=humid(h_i,vtot,vper1,M)
-m_i=(0.18*h_i)*vtot;
-%at 24 degrees Celsius, amount of water in air before humidified (mg), at 50% humidity
+function vper_h=humid(vtot,vper1,M)
+m_i=4.5;
+%at 24 degrees Celsius, amount of water in air before humidified (mg), at
+%50% humidity, for inspired air
 m_f=22;
 %at 37 degrees Celsius, amount of water in air after humidified (mg), at 100% humidity
 water_added=m_f-m_i;
