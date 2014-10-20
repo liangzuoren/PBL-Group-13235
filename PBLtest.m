@@ -451,7 +451,7 @@ end
 %vtot= volume of air inhaled- 0.5 L in this model
 
 function vper_h=humid(h_i,vtot,vper1,M)
-m_i=(0.18*h_i)*vtot;
+m_i=4.5;
 %at 24 degrees Celsius, amount of water in air before humidified (mg), at 50% humidity
 m_f=22;
 %at 37 degrees Celsius, amount of water in air after humidified (mg), at 100% humidity
