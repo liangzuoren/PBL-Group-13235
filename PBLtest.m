@@ -7,47 +7,51 @@ end
 %Entry box is where inhaled air is humidified and exhaled air leaves the
 %body from
 function entry
-PP2 = [116.0 32.0 47.0 565.0];
+M = [31.9988 44.0095 28.01348 33.00674];
+% M = molar mass of each constituent
+TV = 0.5; % liters
+H = 1.73; % height in meters of standard man
+W = 68; % weight in kilograms of standard man
+
+PP2 = [116.0 32.0 565.0 47.0];
 % partial pressures in expired air
-PP4 = [158.0 0.3 596.0 5.7]; 
-% partial pressures in stream 4, humidified air
-PP7 = [100.0 40.0 47.0 573.0];
+PP1 = [158.0 0.3 596.0 5.7]; 
+% partial pressures in inspired air
+PP7 = [100.0 40.0 573.0 47.0];
 % partial pressures in alveolar air
+
 vfrac2 = PP2 ./ 760;
-vfrac4 = PP4 ./ 760;
+vfrac1 = PP1 ./ 760;
 vfrac7 = PP7 ./ 760;
 % calculates the volume fractions of the constituents from the partial
 % pressures
-vfrac6 = vfrac4;
-
 % vper4 = humid(vper_1,0.5,50);
-% % calculates composition after humidification in Entry unit, or can we get
-% % these values from research?
-
-
-H = 1.73; % height in meters of standard man
-W = 68; % weight in kilograms of standard man
-TV = 0.5; % liters
+% calculates composition after humidification in Entry unit
+% vfrac6 = vfrac4;
+% the compositions of stream 6 and 4 are equal because stream 4 is
+% the only inlet stream and stream 6 is the only outlet stream of the dead 
+% space unit, and there are no reactions
 [RFin,RFex] = RF(H,W);
+% RF calculates the respiration frequencies for inspiration and expiration 
+% based on height and weight
 tin = 30/RFin;
 % RFin is number of breaths per minute, divide by 2 to get number of
 % inspirations per minute and then multiply by 60s/1min to get time of
 % inspiration
 texp = 30/RFex;
 % RFex is number of breaths per minute, divide by 2 to get number of
-% exspirations per minute and then multiply by 60s/1min to get time of
-% exspiration
-tresp = tin + texp;
-% calculates length of time per inspiration and expiration from breathing
-% frequencies
+% expirations per minute and then multiply by 60s/1min to get time of
+% expiration
+tresp = tin + texp; % + t_bh
+% sum of inspiration, breathold, and expiration times is the time of one 
+% full respiraory cycle
+
 insp_range = 0:0.01:tin;
 exp_range = 0:0.01:texp;
 resp_range = 0:0.01:tresp;
 index_in = length(insp_range);
 index_exp = length(exp_range);
 index_resp = length(resp_range);
-global vflow6_in;
-global vflow7_ex;
 for i = 1:index_in
     vflow1_in(i) = -volumetricflow(RFin,TV,insp_range(i));
     % volumetric flow rate for inspiration in L/s
@@ -71,9 +75,8 @@ end
 for i = 1:index_exp
     vflow2_ex(i) = volumetricflow(RFex,TV,exp_range(i));
     % volumetric flow rate for expiration in L/s
-    x = deadspace_expfrac(TV,RFex,texp);
     vflow5_ex(i) = vflow2_ex(i);
-    vflow7_ex(i) = vflow5_ex(i) - x*vflow2_ex(i);
+    vflow7_ex(i) = 0.7*vflow5_ex(i);
     
     Pav_ex(i) = alveolarpressure(vflow2_ex(i));
     % calculates alveolar pressure with respect to time during expiration
@@ -120,6 +123,8 @@ end
 vflow = [vflow1; vflow2; vflow4; vflow5; vflow6; vflow7; vflow8; ...
     vflow9; vflow10; vflow11];
 
+t_start_4 = traveltime(RFin,TV,index_in,insp_range)
+
 figure
 plot(resp_range,vflow1,resp_range,vflow2,resp_range,vflow4,resp_range,...
     vflow5,resp_range,vflow6,resp_range,vflow7)
@@ -131,8 +136,7 @@ ylabel('Volumetric Flow Rate (L/s)')
     % resp_range,vflow11)
 % title('Volumetric Flow Rate for O2 and CO2 Diffusion')
 
-M = [31.9988 44.0095 28.01348 33.00674];
-% M = molar mass of each constituent
+
 
 % w = massfrac(vper,M);
 % % w = the mass fraction of each constituent in each stream
@@ -293,6 +297,10 @@ end
 % m5w5,H2O-m6w6,H2O=0;  %mass flow rate equation for H2O
 % end
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 59dfe2943e4b7b9352689a6f3bbd4239f5fee90f
 %only for steady state
 function blood
 H = 1.73; % height in meters of standard man
@@ -435,9 +443,8 @@ end
 
 
 %humid function calculates the volume percentages of the air constiuents
+%after is has been humidified from 50% (when inspired) to 100%
 
-%after is has been humidified to 100%
-%h_i= initial relative humidity of air when inspired
 %m_i=initial amount of water in air when inspired (mg)
 %m_f=final amount of water in air after humdidification (mg)
 %water_added=total amount of water added to air when it is humidified (mg)
@@ -451,9 +458,10 @@ end
 %vper_h= volume percentages of air after it is humidified
 %vtot= volume of air inhaled- 0.5 L in this model
 
-function vper_h=humid(h_i,vtot,vper1,M)
-m_i=(0.18*h_i)*vtot;
-%at 24 degrees Celsius, amount of water in air before humidified (mg), at 50% humidity
+function vper_h=humid(vtot,vper1,M)
+m_i=4.5;
+%at 24 degrees Celsius, amount of water in air before humidified (mg), at
+%50% humidity, for inspired air
 m_f=22;
 %at 37 degrees Celsius, amount of water in air after humidified (mg), at 100% humidity
 water_added=m_f-m_i;
@@ -519,82 +527,12 @@ end
 % vflow = the volumetric flow rate of air (either inspiratory or expiratory
 % flow rate, depending on the time)
 
-function Pav = alveolarpressure(vflow)
+function Pav = alveolarpressure(vflow1)
 Raw = 1.41 / 1.36; % 1.36 is conversion factor to convert cmH2O to mmHg
 Pb = 760; % mmHg
 Pav = vflow * Raw + Pb;
 end
-
-
-% deadspace_expfraction calculates the fraction x of the expired air flow
-% rate that comes from the deadspace
-% deadvol = the volume of air the dead space contains
-% Integral of the (x * [equation for expiratory flow rate]) with bounds 0 
-% to texp equals deadvol
-% Solves this equation for x
-
-function x = deadspace_expfrac(TV,RFex,texp)
-deadvol = 0.3 * TV;
-x = 2*deadvol/TV * (1 / (1 - cos(pi*RFex*texp/30)));
-end
  
-% VA = alveolar volume
-% PP_O2_humid = partial pressure of O2 in humidifed inspired air
-% R = gas constant
-% Tb = body temperature
-
-
-function alveoli(Tb,Pav,TV,resp_range,index_resp,PP_O2_humid,PP_CO2_humid,vflow1)
-R = 62.3637;
-% gas constant
-
-C_O2_av = 0:0.01:780;
-C_CO2_av = 0:0.01:780;
-index_C_O2 = length(C_O2_av);
-index_C_CO2 = length(C_CO2_av);
-VA = 2.5; % APPROXIMATE VALUE
-
-PP_O2_av_tin = 0.7 * TV * PP_O2_humid / (VA + 0.7 * TV);
-PP_CO2_av_tin = 0.7 * TV * PP_CO2_humid / (VA + 0.7 * TV);
-
-for i = 1:index_resp
-    y(i) = - C_O2_av(i) + ((PP_O2_av_tin/(760*Tb*R) * (VA / ...
-        (1 + 21/60000*C_O2_av(i)-425/60000*C_CO2_av(i)))) / ...
-        (VA + 0.7 * TV))^((21/(60000) * C_O2_av(i) * (VA / ...
-        (1 + 21/60000*C_O2_av(i)-425/60000*C_CO2_av(i)) * C_O2_av(i)))/...
-        (0.7 * vflow1(i)));
-    z(i) = - C_CO2_av(i) + ((PP_CO2_av_tin/(760*Tb*R) * (VA / ...
-        (1 + 21/60000*C_O2_av(i)-425/60000*C_CO2_av(i)))) / ...
-        (VA + 0.7 * TV))^((425/(60000) * C_CO2_av(i) * (VA / ...
-        (1 + 21/60000*C_O2_av(i)-425/60000*C_CO2_av(i)) * C_O2_av(i)))/...
-        (0.7 * vflow1(i)));
-    if abs(y(i) - z(i)) < 0.001
-        C_O2_av_final(i) = C_O2_av(i);
-        C_CO2_av_final(i) = C_CO2_av(i);
-    end
-end
-% Vav equation DOES NOT take pressure into account - would be if alveoli
-% did not change size and just volume change due to gas exchange - FIX
-% figure out why C_CO2_av_final is increasing over time, because it should
-% decrease
-% magnitudes of concentrations too high?
-% inspiration = continuation from expiration, just extend time
-figure
-plot(resp_range,C_O2_av_final)
-title('C_O2_av_final')
-figure
-plot(resp_range,C_CO2_av_final)
-title('C_CO2_av_final')
-for i = 1:index_resp
-    Vav(i) = VA / (1 + 21/6000*C_O2_av_final(i)-425/60000*C_CO2_av_final(i));
-end
-
-figure
-plot(resp_range,Vav)
-title('Volume of Alveoli Over One Respiratory Cycle')
-
-end
-
 %calculates the volume compositions of each constituent in the gas in each
 %unit
 function partial_vol= volume(vper1)
@@ -645,3 +583,30 @@ for i=1:8
     
 end
 end
+
+% travel time calculates the time of air to travel to different locations
+% in the lungs
+% t_start 4 = the time required for air to travel to the dead space unit
+% region, which will be when flow begins in stream 4
+% t1 = the time to travel through the extrathoracic region
+% t2 = the time required to travel though the trachea
+function t_start_4 = traveltime(RFin,TV,index_in,insp_range)
+for i = 1:index_in
+    int_vflow(i) = -0.5*TV*cos(pi*RFin*insp_range(i)/30)+0.5*TV;
+    if abs(int_vflow(i) - 50/1000) < 0.01
+        t1 = insp_range(i);
+        % the integral of the inspiratory volumetric flow rate from 0 to t1
+        % equals the volume of the extrathoracic volume
+    end
+end
+for i = 1:index_in
+    if abs(int_vflow(i)*1000/(pi*(1.539/2)^2 - 10.26)) < 0.01
+        t2 = insp_range(i);
+        % int_vflow(i)*1000/(pi*(1.539/2)^2 - 10.26 is the integral of the 
+        % linear velocity
+        % this integral from 0 to t2 equals the length of the trachea
+    end
+end
+t_start_4 = t1 + t2; 
+end
+
