@@ -1,7 +1,7 @@
 
 function PBLtest
 entry
-% blood
+blood
 end
 
 %Entry box is where inhaled air is humidified and exhaled air leaves the
