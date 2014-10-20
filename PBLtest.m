@@ -75,9 +75,8 @@ end
 for i = 1:index_exp
     vflow2_ex(i) = volumetricflow(RFex,TV,exp_range(i));
     % volumetric flow rate for expiration in L/s
-    x = deadspace_expfrac(TV,RFex,texp);
     vflow5_ex(i) = vflow2_ex(i);
-    vflow7_ex(i) = vflow5_ex(i) - x*vflow2_ex(i);
+    vflow7_ex(i) = 0.7*vflow5_ex(i);
     
     Pav_ex(i) = alveolarpressure(vflow2_ex(i));
     % calculates alveolar pressure with respect to time during expiration
@@ -522,20 +521,6 @@ function Pav = alveolarpressure(vflow1)
 Raw = 1.41 / 1.36; % 1.36 is conversion factor to convert cmH2O to mmHg
 Pb = 760; % mmHg
 Pav = vflow1 * Raw + Pb;
-end
-
-
-% deadspace_expfraction calculates the fraction x of the expired air flow
-% rate that comes from the deadspace
-% deadvol = the volume of air the dead space contains
-% Integral of the (x * [equation for expiratory flow rate]) with bounds 0 
-% to texp equals deadvol
-% Solves this equation for x, the fraction of the expired air flow rate
-% that comes from the deadspace
-
-function x = deadspace_expfrac(TV,RFex,texp)
-deadvol = 0.3 * TV;
-x = 2*deadvol/TV * (1 / (1 - cos(pi*RFex*texp/30)));
 end
  
 %calculates the volume compositions of each constituent in the gas in each
