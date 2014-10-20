@@ -4,8 +4,9 @@ entry
 blood
 end
 
-%Entry box is where inhaled air is humidified and exhaled air leaves the
-%body from
+%Entry unit is where inhaled air is humidified and warmed and exhaled air 
+%leaves the body from
+%physiologically equivalent to the nose, pharynx, larynx, and trachea
 function entry
 M = [31.9988 44.0095 28.01348 33.00674];
 % M = molar mass of each constituent
@@ -16,7 +17,8 @@ W = 68; % weight in kilograms of standard man
 PP2 = [116.0 32.0 565.0 47.0];
 % partial pressures in expired air
 PP1 = [158.0 0.3 596.0 5.7]; 
-% partial pressures in inspired air
+% partial pressures in inspired air -- not final values we are using, not 
+% 50% humidity
 PP7 = [100.0 40.0 573.0 47.0];
 % partial pressures in alveolar air
 
@@ -25,12 +27,14 @@ vfrac1 = PP1 ./ 760;
 vfrac7 = PP7 ./ 760;
 % calculates the volume fractions of the constituents from the partial
 % pressures
+
 % vper4 = humid(vper_1,0.5,50);
 % calculates composition after humidification in Entry unit
 % vfrac6 = vfrac4;
 % the compositions of stream 6 and 4 are equal because stream 4 is
 % the only inlet stream and stream 6 is the only outlet stream of the dead 
 % space unit, and there are no reactions
+
 [RFin,RFex] = RF(H,W);
 % RF calculates the respiration frequencies for inspiration and expiration 
 % based on height and weight
@@ -72,6 +76,7 @@ for i = 1:index_in
     % calculates alveolar pressure with respect to time during inspiration
     
 end
+
 for i = 1:index_exp
     vflow2_ex(i) = volumetricflow(RFex,TV,exp_range(i));
     % volumetric flow rate for expiration in L/s
@@ -107,18 +112,16 @@ end
 for i = 1:length(rg4_e)
     vflow4_post(i) = 0;
 end
+% adds in zero flow rate to graph for stream 4
+% still need to do for other streams
 
 vflow1 = [vflow1_in vflow1_ex];
 vflow2 = [vflow2_in vflow2_ex];
-% vflow3 = [vflow3_in vflow3_ex];
 vflow4 = [vflow4_pre vflow4_in vflow4_ex vflow4_post];
 vflow5 = [vflow5_in vflow5_ex];
 vflow6 = [vflow6_in vflow6_ex];
 vflow7 = [vflow7_in vflow7_ex];
-% combines functions for inspiration and expiration
-
-% calculate Pav_O2 and Pav_CO2 from Pav
-
+% combines functions for entire respiratory cycle
 
 for i = 1:index_resp
     vflow8(i) = 21*60/100*Pav(i);
@@ -141,18 +144,13 @@ range_6 = resp_range+t_start_6;
 range_7 = resp_range+t_start_6;
 overall_range = 0:0.01:tresp+t_start_6*2+0.01;
 figure
-plot(resp_range,vflow1,resp_range+2*t_start_6,vflow2,overall_range,vflow4,resp_range+t_start_6*2-t_start_4,...
-    vflow5,resp_range+t_start_6,vflow6,resp_range+t_start_6,vflow7)
+plot(resp_range,vflow1,resp_range+2*t_start_6,vflow2,overall_range,...
+    vflow4,resp_range+t_start_6*2-t_start_4,vflow5,resp_range+t_start_6,...
+    vflow6,resp_range+t_start_6,vflow7)
 title('Volumetric Flow Rates of Streams 1, 2, 4, 5, 6, and 7')
 xlabel('Time (s)')
 ylabel('Volumetric Flow Rate (L/s)')
 % legend('1','2','4','5','6','7')
-% figure
-% plot(resp_range,vflow8,resp_range,vflow10,resp_range,vflow9, ...
-    % resp_range,vflow11)
-% title('Volumetric Flow Rate for O2 and CO2 Diffusion')
-
-
 
 % w = massfrac(vper,M);
 % % w = the mass fraction of each constituent in each stream
@@ -187,8 +185,6 @@ dT = Tf - Ti;
 Q = mass * c * dT;
 end
 
-
-
 % massfrac calculates the mass fraction of constituents in a stream
 % vper = the volume percentage of the constituents
 % vfrac = the volume fraction of the constituents
@@ -207,7 +203,6 @@ sum_ratio = sum(mratio);
 w = mratio ./ sum_ratio;
 % mass fractions calculated from mass ratios and sum
 end
-
 
 function vs = constituent_volume(V, w)
 vs = V .* w;
@@ -244,85 +239,19 @@ function d = density(P,M,T)
 R = 62.3637; % if units chosen are mmHg, L, and K
 d = (M * P) / (T * R);
 end
-%{
-%PV=nRT
-%R=62.36 (L*mmHg)(mol*K)
-
-<<<<<<< HEAD
-% BTP values assumed for function deadspace and function gas_exchange_1
-function values_ds= deadspace(n2,nCO2,nN2,nH2O)
-DSV=0.30*TV;   %30% of the total inhaled air goes to dead space
-VO2=(nO2*62.36*310)/149.3;  %partial volume of O2 during both inhalation and exhalation
-VCO2=(nCO2*62.36*310)/0.3;  %partial volume of CO2 during both inhalation and exhalation
-VN2=(nN2*62.36*310)/563.4;  %partial volume of N2 during both inhalation and exhalation
-VH2O=(nH2O*62.36*310)/47;   %partial volume of H2O during both inhalation and exhalation
-values_ds=[VO2 VCO2 VN2 VH2O];  %partial volumes for deadspace unit
-A: m3-m4=0;  %total mass flow rate equation
-m3w3,CO2-m4w4,CO2=0;  %mass flow rate equation for CO2
-m3w3,O2-m4w4,O2=0; %mass flow rate equation for O2
-m3w3,N2-m4w4,N2=0; %mass flow rate equation for N2
-m3w3,H2O-m4w4,H2O=0; %mass flow rate equation for H2O
-end
-
-function values_ge1= gas_exchange_1(nO2_i,nCO2_i,nO2_f,nCO2_f,nN2,nH2O)
-ge1v=0.70*tv; %70% of the total inhaled air goes to the gas exchange 1 box
-VO2_i=(nO2_i*62.36*310)/149.3;  %partial volume of O2 during inhalation
-VCO2_i=(nCO2_i*62.36*310)/0.3; %partial volume of CO2 during inhalation
-VO2_f=(nO2_f*62.36*310)/120; %partial volume of O2 during exhalation
-VCO2_f=(nCO2_f*62.36*310)/27;  %partial volume of CO2 during exhalation
-VN2_i=(nN2*62.36*310)/563.4; %partial volume of N2 during exhalation
-VN2_f=(nN2*62.36*310)/566; %partial volume of N2 during exhalation
-VH2O=(nH2O*62.36*310)/47;  %partial volume of H2O during both inhalation and exhalation
-values_ge1=[VO2_i VCO2_i VO2_f VCO2_f VN2_i VN2_f VH2O];  %partial volumes for gas exchange 1 unit
-Total: m5+m8+m10-m6-m7-m9=0;  %total mass flow rate equation
-m10w10,CO2+m8w8,CO2-m6w6,CO2=0;  %mass flow rate equation for CO2
-m5w5,O2-m9w9,O2-m7w7,O2=0;  %mass flow rate equation for O2
-m5w5,N2-m6w6,N2=0;  %mass flow rate equation for N2
-m5w5,H2O-m6w6,H2O=0;  %mass flow rate equation for H2O
-end
-%}
-
-% % BTP values assumed for function deadspace and function gas_exchange_1
-% function values_ds= deadspace(n2,nCO2,nN2,nH2O)
-% DSV=0.30*TV;   %30% of the total inhaled air goes to dead space
-% VO2=(nO2*62.36*310)/149.3;  %partial volume of O2 during both inhalation and exhalation
-% VCO2=(nCO2*62.36*310)/0.3;  %partial volume of CO2 during both inhalation and exhalation
-% VN2=(nN2*62.36*310)/563.4;  %partial volume of N2 during both inhalation and exhalation
-% VH2O=(nH2O*62.36*310)/47;   %partial volume of H2O during both inhalation and exhalation
-% values_ds=[VO2 VCO2 VN2 VH2O];  %partial volumes for deadspace unit
-% A: m3-m4=0;  %total mass flow rate equation
-% m3w3,CO2-m4w4,CO2=0;  %mass flow rate equation for CO2
-% m3w3,O2-m4w4,O2=0; %mass flow rate equation for O2
-% m3w3,N2-m4w4,N2=0; %mass flow rate equation for N2
-% m3w3,H2O-m4w4,H2O=0; %mass flow rate equation for H2O
-% end
-
-% function values_ge1= gas_exchange_1(nO2_i,nCO2_i,nO2_f,nCO2_f,nN2,nH2O)
-% ge1v=0.70*tv; %70% of the total inhaled air goes to the gas exchange 1 box
-% VO2_i=(nO2_i*62.36*310)/149.3;  %partial volume of O2 during inhalation
-% VCO2_i=(nCO2_i*62.36*310)/0.3; %partial volume of CO2 during inhalation
-% VO2_f=(nO2_f*62.36*310)/120; %partial volume of O2 during exhalation
-% VCO2_f=(nCO2_f*62.36*310)/27;  %partial volume of CO2 during exhalation
-% VN2_i=(nN2*62.36*310)/563.4; %partial volume of N2 during exhalation
-% VN2_f=(nN2*62.36*310)/566; %partial volume of N2 during exhalation
-% VH2O=(nH2O*62.36*310)/47;  %partial volume of H2O during both inhalation and exhalation
-% values_ge1=[VO2_i VCO2_i VO2_f VCO2_f VN2_i VN2_f VH2O];  %partial volumes for gas exchange 1 unit
-% Total: m5+m8+m10-m6-m7-m9=0;  %total mass flow rate equation
-% m10w10,CO2+m8w8,CO2-m6w6,CO2=0;  %mass flow rate equation for CO2
-% m5w5,O2-m9w9,O2-m7w7,O2=0;  %mass flow rate equation for O2
-% m5w5,N2-m6w6,N2=0;  %mass flow rate equation for N2
-% m5w5,H2O-m6w6,H2O=0;  %mass flow rate equation for H2O
-% end
 
 
-%only for steady state
 function blood
+%only for steady state
 %vO2inGE2 = 21; %ml/min/mm Hg
 %vO2inGE1 = vO2inGE2/0.7*0.3;
 %vCO2outGE2 = 451;
 %vCO2outGE1 = vCO2outGE2/0.7*0.3;
 %vO2outblood = vO2inGE1 + vO2inGE2;
 %vCO2inblood = vCO2outGE1 + vCO2outGE2;
+H = 1.73; % height in meters of standard man
+W = 68; % weight in kilograms of standard man
+[RFin,RFex] = RF(H,W);
 tin = 30/RFin;
 % RFin is number of breaths per minute, divide by 2 to get number of
 % inspirations per minute and then multiply by 60s/1min to get time of
@@ -400,42 +329,6 @@ for x=0:1 %modeling 1 breath
     
 end
 
-
-%{
-[mCO2outGE1, mO2inGE1] = bloodGE1(vCO2outGE1, vO2inGE1, dO2, dCO2) ;
-[mCO2outGE2, mO2inGE2] = bloodGE2(vCO2outGE2, vO2inGE2, dO2, dCO2);
-[mCO2inSurroundings, mO2outSurroundings] = bloodSurroundings(vCO2inSurr, vO2outSurr, dO2, dCO2);
- 
-mCO2in = mCO2inSurroundings; %adding up all the mass flow rates of streams bringing CO2 in
-mCO2out = mCO2outGE1 + mCO2outGE2; %adding up all the mass flow rates of streams bringing CO2 out
-mO2in = mO2inGE1 + mO2inGE2; %adding up all the mass flow rates of streams bringing O2 in
-mO2out = mO2outSurroundings; %adding up all the mass flow rates of streams bringing O2 out
-
-mBlood = [mO2in mCO2in mO2out mCO2out]; %blood box = mass flow rate 
-
-end
-
-
-
-function [mCO2in, mO2out] = bloodGE1(vCO2, vO2, dO2, dCO2)
-mCO2in = v2m(vCO2 , dCO2);
-mO2out = v2m(vO2 , dO2);
-end
-
-function [mCO2in, mO2out] = bloodGE2(vCO2, vO2, dO2, dCO2)    
-mCO2in = v2m(vCO2 , dCO2);
-mO2out = v2m(vO2 , dO2);
-end
-
-function [mCO2out, mO2in] = bloodSurroundings(vCO2, vO2, dO2, dCO2)
-mCO2out = v2m(vCO2 , dCO2);
-mO2in = v2m(vO2 , dO2);
-end
-
-%this function converts volumetric flow rate to mass flow rate
-function massflowrate = v2m(volumetricflowrate, density)
-massflowrate = volumetricflowrate*density;
-%}
 end
 
 %calcuate mass flow rateswith regards to time
@@ -490,7 +383,8 @@ w_f= mass_f ./ mass_tot2;
 vper_h=volumepercentage(mass_f,M);
 end
 
-%volumepercentage function calculates the volume percentages of constituents in a stream 
+%volumepercentage function calculates the volume percentages of 
+%constituents in a stream 
 %based on the amounts of each constituent (in mg)
 %mass_f=mass of all constitiuents (mg)
 %M= molar masses of all constituents (g/mol)
@@ -590,7 +484,7 @@ for i=1:8
 end
 end
 
-% travel time calculates the time of air to travel to different locations
+% traveltime calculates the time of air to travel to different locations
 % in the lungs
 % t1 = the time to travel through the extrathoracic region
 % t2 = the time required to travel though the trachea
