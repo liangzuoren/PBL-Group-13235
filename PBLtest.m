@@ -25,9 +25,9 @@ vfrac1 = PP1 ./ 760;
 vfrac7 = PP7 ./ 760;
 % calculates the volume fractions of the constituents from the partial
 % pressures
-vper4 = humid(vper_1,0.5,50);
+% vper4 = humid(vper_1,0.5,50);
 % calculates composition after humidification in Entry unit
-vfrac6 = vfrac4;
+% vfrac6 = vfrac4;
 % the compositions of stream 6 and 4 are equal because stream 4 is
 % the only inlet stream and stream 6 is the only outlet stream of the dead 
 % space unit, and there are no reactions
@@ -123,6 +123,8 @@ end
 
 vflow = [vflow1; vflow2; vflow4; vflow5; vflow6; vflow7; vflow8; ...
     vflow9; vflow10; vflow11];
+
+t_start_4 = traveltime(vflow1,RFin,TV,index_in,insp_range)
 
 figure
 plot(resp_range,vflow1,resp_range,vflow2,resp_range,vflow4,resp_range,...
@@ -516,7 +518,7 @@ end
 % vflow = the volumetric flow rate of air (either inspiratory or expiratory
 % flow rate, depending on the time)
 
-function Pav = alveolarpressure(vflow)
+function Pav = alveolarpressure(vflow1)
 Raw = 1.41 / 1.36; % 1.36 is conversion factor to convert cmH2O to mmHg
 Pb = 760; % mmHg
 Pav = vflow1 * Raw + Pb;
@@ -586,3 +588,19 @@ for i=1:8
     
 end
 end
+
+function t_start_4 = traveltime(vflow1,RFin,TV,index_in,insp_range)
+for i = 1:index_in
+    int_vflow(i) = -0.5*TV*cos(pi*RFin*insp_range(i)/30)+0.5*TV;
+    if abs(int_vflow(i) - 50/1000) < 0.01
+        t1 = insp_range(i);
+    end
+end
+for i = 1:index_in
+    if abs(int_vflow(i)*1000/(pi*(1.539/2)^2 - 10.26)) < 0.01
+        t2 = insp_range(i);
+    end
+end
+t_start_4 = t1 + t2; 
+end
+
