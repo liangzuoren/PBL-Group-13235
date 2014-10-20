@@ -124,7 +124,7 @@ end
 vflow = [vflow1; vflow2; vflow4; vflow5; vflow6; vflow7; vflow8; ...
     vflow9; vflow10; vflow11];
 
-t_start_4 = traveltime(vflow1,RFin,TV,index_in,insp_range)
+t_start_4 = traveltime(RFin,TV,index_in,insp_range)
 
 figure
 plot(resp_range,vflow1,resp_range,vflow2,resp_range,vflow4,resp_range,...
@@ -589,16 +589,27 @@ for i=1:8
 end
 end
 
-function t_start_4 = traveltime(vflow1,RFin,TV,index_in,insp_range)
+% travel time calculates the time of air to travel to different locations
+% in the lungs
+% t_start 4 = the time required for air to travel to the dead space unit
+% region, which will be when flow begins in stream 4
+% t1 = the time to travel through the extrathoracic region
+% t2 = the time required to travel though the trachea
+function t_start_4 = traveltime(RFin,TV,index_in,insp_range)
 for i = 1:index_in
     int_vflow(i) = -0.5*TV*cos(pi*RFin*insp_range(i)/30)+0.5*TV;
     if abs(int_vflow(i) - 50/1000) < 0.01
         t1 = insp_range(i);
+        % the integral of the inspiratory volumetric flow rate from 0 to t1
+        % equals the volume of the extrathoracic volume
     end
 end
 for i = 1:index_in
     if abs(int_vflow(i)*1000/(pi*(1.539/2)^2 - 10.26)) < 0.01
         t2 = insp_range(i);
+        % int_vflow(i)*1000/(pi*(1.539/2)^2 - 10.26 is the integral of the 
+        % linear velocity
+        % this integral from 0 to t2 equals the length of the trachea
     end
 end
 t_start_4 = t1 + t2; 
