@@ -62,7 +62,7 @@ for i = 1:index_in
     % entry unit is splitter, 30% of flow to Dead Space and 70% to Gas Exchange
 
     % calculate vflow3_in somehow...
-     
+    
     vflow2_in(i) = 0;
     vflow5_in(i) = 0;
     vflow7_in(i) = 0;
@@ -89,6 +89,8 @@ for i = 1:index_exp
     
 end
 
+[t_start_4,t_start_6] = traveltime(RFin,TV,index_in,insp_range);
+
 Pav = [Pav_in Pav_ex];
 
 plot(resp_range,Pav)
@@ -97,10 +99,19 @@ xlabel('Time (s)')
 ylabel('Alveolar Pressure (mmHg)')
 % graph of alveolar pressure over one full respiratory cycle
 
+rg4_i = 0:0.01:t_start_4;
+rg4_e = 0:0.01:0.65;
+for i = 1:length(rg4_i)
+    vflow4_pre(i) = 0;
+end
+for i = 1:length(rg4_e)
+    vflow4_post(i) = 0;
+end
+
 vflow1 = [vflow1_in vflow1_ex];
 vflow2 = [vflow2_in vflow2_ex];
 % vflow3 = [vflow3_in vflow3_ex];
-vflow4 = [vflow4_in vflow4_ex];
+vflow4 = [vflow4_pre vflow4_in vflow4_ex vflow4_post];
 vflow5 = [vflow5_in vflow5_ex];
 vflow6 = [vflow6_in vflow6_ex];
 vflow7 = [vflow7_in vflow7_ex];
@@ -120,17 +131,22 @@ for i = 1:index_resp
     % calculate O2 and CO2 transport rate out of the blood to tissues
 end
 
-vflow = [vflow1; vflow2; vflow4; vflow5; vflow6; vflow7; vflow8; ...
-    vflow9; vflow10; vflow11];
 
-t_start_4 = traveltime(RFin,TV,index_in,insp_range)
 
+range_1 = resp_range;
+range_2 = resp_range+2*t_start_6;
+range_4 = 0:0.01:tin+t_start_4;
+range_5 = resp_range+t_start_6*2-t_start_4;
+range_6 = resp_range+t_start_6;
+range_7 = resp_range+t_start_6;
+overall_range = 0:0.01:tresp+t_start_6*2+0.01;
 figure
-plot(resp_range,vflow1,resp_range,vflow2,resp_range,vflow4,resp_range,...
-    vflow5,resp_range,vflow6,resp_range,vflow7)
+plot(resp_range,vflow1,resp_range+2*t_start_6,vflow2,overall_range,vflow4,resp_range+t_start_6*2-t_start_4,...
+    vflow5,resp_range+t_start_6,vflow6,resp_range+t_start_6,vflow7)
 title('Volumetric Flow Rates of Streams 1, 2, 4, 5, 6, and 7')
 xlabel('Time (s)')
 ylabel('Volumetric Flow Rate (L/s)')
+% legend('1','2','4','5','6','7')
 % figure
 % plot(resp_range,vflow8,resp_range,vflow10,resp_range,vflow9, ...
     % resp_range,vflow11)
@@ -576,11 +592,28 @@ end
 
 % travel time calculates the time of air to travel to different locations
 % in the lungs
-% t_start 4 = the time required for air to travel to the dead space unit
-% region, which will be when flow begins in stream 4
 % t1 = the time to travel through the extrathoracic region
 % t2 = the time required to travel though the trachea
-function t_start_4 = traveltime(RFin,TV,index_in,insp_range)
+% t_start_4 = the time required for air to first reach the dead space unit,
+% (the time required to reach the generation 1 bronchi), which will be when 
+% flow begins in stream 4
+% t_start_6 = the time required for air to first reach the alveoli
+% (generation 17) 
+function [t_start_4,t_start_6] = traveltime(RFin,TV,index_in,insp_range)
+d = [1.539 1.043 0.71 0.479 0.385 0.299 0.239 0.197 0.159 0.132 0.111 ...
+    0.093 0.081 0.07 0.063 0.056 0.051 0.046 0.043 0.04 0.038 0.037 ...
+    0.035 0.035];
+% d = the diameters of each generations of tubes in cm, based on scaled 
+% Weibel A model
+r = d ./ 2;
+% r = the radii of each generation of tubes in cm
+A = pi*r.^2;
+% A = the cross-sectional area of each generation of tubes in cm^2
+l = [10.26 4.07 1.624 0.65 1.086 0.915 0.769 0.65 0.547 0.462 0.393 ...
+    0.333 0.282 0.231 0.197 0.171 0.141 0.121 0.1 0.085 0.071 0.06 ...
+    0.05 0.043];
+% l = the length of each generation of tubes in centimeters
+% the trachea is generation 0, which corresponds to d(1), r(1), and l(1)
 for i = 1:index_in
     int_vflow(i) = -0.5*TV*cos(pi*RFin*insp_range(i)/30)+0.5*TV;
     if abs(int_vflow(i) - 50/1000) < 0.01
@@ -590,13 +623,33 @@ for i = 1:index_in
     end
 end
 for i = 1:index_in
-    if abs(int_vflow(i)*1000/(pi*(1.539/2)^2 - 10.26)) < 0.01
+    if abs(int_vflow(i)*1000/A(1) - l(1)) < 0.1
         t2 = insp_range(i);
-        % int_vflow(i)*1000/(pi*(1.539/2)^2 - 10.26 is the integral of the 
+        % int_vflow(i)*1000/(pi*(r(1))^2 is the integral of the 
         % linear velocity
-        % this integral from 0 to t2 equals the length of the trachea
+        % this integral from 0 to t2 equals the length of the trachea l(1)
     end
 end
+
 t_start_4 = t1 + t2; 
+% the time to first reach the dead space unit (time to reach generation 1 
+% brochi) is the sum of the time to travel through the extrathoracic region 
+% and the time to travel through the trachea
+
+for i = 2:17
+    for j =1:index_in
+        if abs(int_vflow(j)*1000/A(i) - l(i)) < 0.1
+            t_dead_gen(i) = insp_range(j);
+        end
+    end
+end
+
+t_dead_sum = sum(t_dead_gen);
+% the first alveoli appear at generation 17
+% the time to travel from the exit of the trachea to the first alveoli is 
+% the sum of the time to travel though the generation 1 through 16 airways
+
+t_start_6 = t_start_4 + t_dead_sum;
+% t_start_6 = the total time required for air to reach the first alveoli
 end
 
