@@ -297,10 +297,6 @@ end
 % m5w5,H2O-m6w6,H2O=0;  %mass flow rate equation for H2O
 % end
 
-<<<<<<< HEAD
-=======
-
->>>>>>> 59dfe2943e4b7b9352689a6f3bbd4239f5fee90f
 %only for steady state
 function blood
 H = 1.73; % height in meters of standard man
@@ -329,70 +325,88 @@ PaCO2i = 40;%40 mmHg partial pressure in beginning for CO2
 Patm = 760; 
 PH2O = 47;%presures taken from diagram in assumed values
 PN2 = 573;
-
+Ptotal = PaO2i+PaCO2i+PH2O+PN2;
+TV = 0.500; %tidal volume = 500 mL
 DifCapO2 = 21; %mL/min/mmHg
 DifCapCO2 = 400; %mL/min/mmHg
 
-dO2 =  density(1, 31.9988, 310); %1 atm, 31.9988 g/mol, 310 K(body temperature)
-dCO2 = density(1, 44.0095, 310); %1 atm, 44.0095 g/mol, 310 K(body temperature)
+dO2 =  density(760, 31.9988, 310); %1 atm, 31.9988 g/mol, 310 K(body temperature)
+dCO2 = density(760, 44.0095, 310); %1 atm, 44.0095 g/mol, 310 K(body temperature)
+trange = 1;
+tstep = 0.01;
+tsize = length(0:tstep:tresp);
 
-
-for x=0:1 %modeling 1 breath
+PaO2alveoliOverTime = zeros(1,tsize);
+PaCO2alveoliOverTime = zeros(1,tsize);
+PaO2alveoli = PaO2i;
+PaCO2alveoli = PaCO2i;
+PaO2capillary = 40;
+PaCO2capillary = 46;
+mO2inTotal = 0;
+mCO2inTotal = 0;
+    
+for x=1:2 %modeling 1 breath
     t=0;
-    PaO2alveoli = PaO2i;
-    PaCO2alveoli = PaCO2i;
-    PaO2capillary = 40;
-    PaCO2capillary = 46;
     Pinspiredair = [158.0 0.3 5.7 596.0];
-    trange = 1;
-    tstep = 0.01;
-
+    
+    
     while t<tin;
         
-        mO2in = vflow6_in(trange)*Pinspiredair(1);
-        mCO2in = vflow6_in(trange)*Pinspiredair(2);
+        mO2in = (pi*RFin*TV/60)*sin(pi*RFin*t/30)* 0.218*tstep*1000; %insert partial pressures/total pressure or mass frac for humidified air here
+        mCO2in = (pi*RFin*TV/60)*sin(pi*RFin*t/30)*0.0003*tstep*1000;
         
-        difRateO2 = DifCapO2 * (PaO2alveoli - PaO2capillary);
-        difRateCO2 = DifCapCO2 * (PaCO2alveoli - PaCO2capillary);
+        difRateO2 = -DifCapO2 * (PaO2alveoli - PaO2capillary) *tstep*60;
+        difRateCO2 = DifCapCO2 * (PaCO2alveoli - PaCO2capillary) *tstep*60;
         mO2 = dO2*difRateO2 + mO2in;
         mCO2 = dCO2*difRateCO2 + mCO2in;
         nO2 = mO2/31.9988;
         nCO2 = mCO2/44.0095;
         %PV=nRT, P = nRT/V
-        PaO2diff = nO2*tstep*62.36367*310/3; %gives pressure in mmHg
-        PaCO2diff = nCO2*tstep*62.36367*310/3;
-        PaO2alveoli = PaO2alveoli - PaO2diff;
-        PaCO2alveoli = PaCO2alveoli - PaCO2diff;
+        PaO2diff = nO2*tstep*62.36367*310/3000; %gives pressure in mmHg
+        PaCO2diff = nCO2*tstep*62.36367*310/3000;
+        PaO2alveoli = PaO2alveoli + PaO2diff;
+        PaCO2alveoli = PaCO2alveoli - PaCO2diff
         
+        PaO2alveoliOverTime(trange)= PaO2alveoli;
+        PaCO2alveoliOverTime(trange)= PaCO2alveoli;
         %mTotal = residualVolume + vflow6_in(trange)*dInspiredAir; %volumetric flow rate * density?
         %PaO2alveoli = (PaO2alveoli * mTotal- mO2 )/ mTotal;%PaO2 = FiO2*(Patm - PH2O) - (PaCO2/RQ)
         %PaCO2alveoli = (PaCO2alveoli * mTotal - mCO2 )/ mTotal;
-        
+        mO2inTotal = mO2inTotal + mO2in;
+        mCO2inTotal = mCO2inTotal + mCO2in;
         t=t+tstep;
         trange = trange+1;
     end
     
-    trange = 1;
-    
-    while t<texp
-        mO2out = vflow7_ex(trange);
-        mCO2out = vflow7_ex(trange);
-        difRateO2 = DifCapO2 * (PaO2alveoli - PaO2capillary);
-        difRateCO2 = DifCapCO2 * (PaCO2alveoli - PaCO2capillary);
+    while t<(tin+texp)
+        mO2out = ((pi*RFex*TV/60)*sin(pi*RFex*t/30)-0.3*mO2inTotal)*PaO2alveoli/Ptotal*tstep*60;
+        mCO2out = ((pi*RFex*TV/60)*sin(pi*RFex*t/30)-0.3*mCO2inTotal)*PaCO2alveoli/Ptotal*tstep*60;
+        
+        difRateO2 = -DifCapO2 * (PaO2alveoli - PaO2capillary)*tstep*60;
+        difRateCO2 = -DifCapCO2 * (PaCO2alveoli - PaCO2capillary)*tstep*60;
         mO2 = dO2*difRateO2 - mO2out;
-        mCO2 = dCO2*difRateCO2 - mO2out;
+        mCO2 = dCO2*difRateCO2 - mCO2out;
         nO2 = mO2/31.9988;
         nCO2 = mCO2/44.0095;
         %PV=nRT, P = nRT/V
-        PaO2diff = nO2*tstep*62.36367*310/3; %gives pressure in mmHg
-        PaCO2diff = nCO2*tstep*62.36367*310/3;
-        PaO2alveoli = PaO2alveoli - PaO2diff;
+        PaO2diff = nO2*tstep*62.36367*310/3000; %gives pressure in mmHg
+        PaCO2diff = nCO2*tstep*62.36367*310/3000;
+        PaO2alveoli = PaO2alveoli + PaO2diff;
         PaCO2alveoli = PaCO2alveoli + PaCO2diff;
+        Ptotal = PaO2alveoli + PaCO2alveoli + PH2O + PN2;
+        PaO2alveoliOverTime(trange)= PaO2alveoli;
+        PaCO2alveoliOverTime(trange)= PaCO2alveoli;
         t=t+tstep;
         trange = trange+1;
-    end
-    
+    end 
 end
+resp_range = 0:0.01:t*x;
+length(resp_range)
+
+    figure
+    plot(resp_range, PaO2alveoliOverTime);
+    figure
+    plot(resp_range, PaCO2alveoliOverTime);
 
 
 %{
@@ -530,7 +544,7 @@ end
 function Pav = alveolarpressure(vflow1)
 Raw = 1.41 / 1.36; % 1.36 is conversion factor to convert cmH2O to mmHg
 Pb = 760; % mmHg
-Pav = vflow * Raw + Pb;
+Pav = vflow1 * Raw + Pb;
 end
  
 %calculates the volume compositions of each constituent in the gas in each
