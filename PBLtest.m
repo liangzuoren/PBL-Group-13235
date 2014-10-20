@@ -335,19 +335,19 @@ for x=0:1 %modeling 1 breath
     PaCO2alveoli = PaCO2i;
     PaO2capillary = 40;
     PaCO2capillary = 46;
-    
+    Pinspiredair = [158.0 0.3 5.7 596.0];
     trange = 1;
     tstep = 0.01;
 
     while t<tin;
         
-        mO2in = vflow6_in;
-        mCO2in = vflow6_in;
+        mO2in = vflow6_in(trange)*Pinspiredair(1);
+        mCO2in = vflow6_in(trange)*Pinspiredair(2);
         
         difRateO2 = DifCapO2 * (PaO2alveoli - PaO2capillary);
         difRateCO2 = DifCapCO2 * (PaCO2alveoli - PaCO2capillary);
-        mO2 = dO2*difRateO2;
-        mCO2 = dCO2*difRateCO2;
+        mO2 = dO2*difRateO2 + mO2in;
+        mCO2 = dCO2*difRateCO2 + mCO2in;
         nO2 = mO2/31.9988;
         nCO2 = mCO2/44.0095;
         %PV=nRT, P = nRT/V
@@ -367,12 +367,12 @@ for x=0:1 %modeling 1 breath
     trange = 1;
     
     while t<texp
-        mO2out = vflow7_ex;
-        mCO2out = vflow7_ex;
+        mO2out = vflow7_ex(trange);
+        mCO2out = vflow7_ex(trange);
         difRateO2 = DifCapO2 * (PaO2alveoli - PaO2capillary);
         difRateCO2 = DifCapCO2 * (PaCO2alveoli - PaCO2capillary);
-        mO2 = dO2*difRateO2;
-        mCO2 = dCO2*difRateCO2;
+        mO2 = dO2*difRateO2 - mO2out;
+        mCO2 = dCO2*difRateCO2 - mO2out;
         nO2 = mO2/31.9988;
         nCO2 = mCO2/44.0095;
         %PV=nRT, P = nRT/V
