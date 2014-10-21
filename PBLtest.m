@@ -1,7 +1,7 @@
 
 function PBLtest
 entry
-blood
+blood(0.65)
 end
 
 %Entry unit is where inhaled air is humidified and warmed and exhaled air 
@@ -271,7 +271,7 @@ end
 %}
 %only for steady state
 
-function blood
+function blood(timeToAlveoli)
 %only for steady state
 
 %vO2inGE2 = 21; %ml/min/mm Hg
@@ -300,48 +300,140 @@ Patm = 760;
 PH2O = 47;%presures taken from diagram in assumed values
 PN2 = 573;
 Ptotal = PaO2i+PaCO2i+PH2O+PN2;
-TV = 600; %tidal volume = 500 mL
+TV = 0.5; %tidal volume = 500 mL
 DifCapO2 = 21; %mL/min/mmHg
 DifCapCO2 = 400; %mL/min/mmHg
-xMax = 2;
+xMax = 3;
 dO2 =  density(760, 31.9988, 310); %1 atm, 31.9988 g/mol, 310 K(body temperature)
 dCO2 = density(760, 44.0095, 310); %1 atm, 44.0095 g/mol, 310 K(body temperature)
 trange = 1;
 tstep = 0.01;
 tsize = length(0:tstep:tresp);
+insp_range = 0:0.01:tin;
+exp_range = 0:0.01:texp;
+resp_range = 0:0.01:tresp;
+index_in = length(insp_range);
+index_exp = length(exp_range);
+index_resp = length(resp_range);
 
-PaO2alveoliOverTime = zeros(1,tsize);%*xMax);
-PaCO2alveoliOverTime = zeros(1,tsize);%*xMax);
+
+PaO2alveoliOverTime = zeros(1,tsize*xMax);
+PaCO2alveoliOverTime = zeros(1,tsize*xMax);
 PaO2alveoli = PaO2i;
 PaCO2alveoli = PaCO2i;
+residualVolume = 1200;
+mO2alveoli = PaO2alveoli/Ptotal * dO2 * residualVolume;
+mCO2alveoli = PaCO2alveoli/Ptotal * dCO2 * residualVolume;
 PaO2capillary = 40;
 PaCO2capillary = 46;
 
-mO2overTime = zeros(1,tsize);%*xMax);
-mCO2overTime = zeros(1,tsize);%*xMax);
+mO2overTime = zeros(1,tsize*xMax);
+mCO2overTime = zeros(1,tsize*xMax);
 
-for x=1:2 %modeling 1 breath
+for x=1:xMax %modeling 1 breath
     t=0;
     mO2inTotal = 0;
     mCO2inTotal = 0;
     Pinspiredair = [158.0 0.3 5.7 596.0];
+    %PaO2alveoli = PaO2i;
+    %PaCO2alveoli = PaCO2i;
     
-    while t<tin
+    while t<texp
+        %mO2out = ((pi*RFex*TV/60)*sin(pi*RFex*t/30)-0.3*mO2inTotal)*dO2/1000*PaO2alveoli/Ptotal/tstep*60;
+        %mCO2out = ((pi*RFex*TV/60)*sin(pi*RFex*t/30)-0.3*mCO2inTotal)*dCO2/1000*PaCO2alveoli/Ptotal/tstep*60;
         
-        mO2in = 0.7*(pi*RFin*TV/60)*sin(pi*RFin*t/30)*0.218*dO2/1000*tstep/60; %insert partial pressures/total pressure or mass frac for humidified air here
-        mCO2in = 0.7*(pi*RFin*TV/60)*sin(pi*RFin*t/30)*0.0003*dCO2/1000*tstep/60;
+        mO2out = ((pi*RFex*TV/60)*sin(pi*RFex*t/30)*0.7)*dO2*PaO2alveoli/Ptotal*tstep;
+        mCO2out = ((pi*RFex*TV/60)*sin(pi*RFex*t/30)*0.7)*dCO2*PaCO2alveoli/Ptotal*tstep;
         
-        difRateO2 = -DifCapO2 * (PaO2alveoli - PaO2capillary) *dO2/1000*tstep/60;
-        difRateCO2 = DifCapCO2 * (PaCO2alveoli - PaCO2capillary) *dCO2/1000*tstep/60;
-        mO2 = difRateO2 + mO2in;
-        mCO2 = difRateCO2 + mCO2in;
+        difRateO2 = -DifCapO2 * (PaO2alveoli - PaO2capillary)*dO2/1000*tstep/60;
+        difRateCO2 = DifCapCO2 * (PaCO2alveoli - PaCO2capillary)*dCO2/1000*tstep/60;
+        mO2 = difRateO2 - mO2out
+        mCO2 = difRateCO2 - mCO2out
+        %{
+        mO2alveoli = mO2alveoli + mO2;
+        mCO2alveoli = mCO2alveoli - mCO2;
+        
+        nO2 = mO2alveoli/31.9988;
+        nCO2 = mCO2alveoli/44.0095;
+        
+        PaO2alveoli = nO2*tstep*62.36367*1000*310/3;
+        PaCO2alveoli = nCO2*tstep*62.36367*1000*310/3;
+        %}
         nO2 = mO2/31.9988;
         nCO2 = mCO2/44.0095;
         %PV=nRT, P = nRT/V
-        PaO2diff = nO2*tstep*62.36367*1000*310/3; %gives pressure in mmHg
-        PaCO2diff = nCO2*tstep*62.36367*1000*310/3;
+        PaO2diff = nO2*62.36367*1000*310/3/1000; %gives pressure in mmHg
+        PaCO2diff = nCO2*62.36367*1000*310/3/1000;
         PaO2alveoli = PaO2alveoli + PaO2diff;
-        PaCO2alveoli = PaCO2alveoli - PaCO2diff;
+        PaCO2alveoli = PaCO2alveoli + PaCO2diff;
+        Ptotal = PaO2alveoli + PaCO2alveoli + PH2O + PN2;
+        PaO2alveoliOverTime(trange)= PaO2alveoli;
+        PaCO2alveoliOverTime(trange)= PaCO2alveoli;
+        mO2overTime(trange) = mO2out;
+        mCO2overTime(trange) = mCO2out;
+        t=t+tstep;
+        trange = trange+1;
+    end 
+    
+    while t<texp + timeToAlveoli
+        difRateO2 = -DifCapO2 * (PaO2alveoli - PaO2capillary)*dO2/1000*tstep/60;
+        difRateCO2 = -DifCapCO2 * (PaCO2alveoli - PaCO2capillary)*dCO2/1000*tstep/60;
+        mO2 = difRateO2;
+        mCO2 = difRateCO2;
+        %{
+        mO2alveoli = mO2alveoli + mO2;
+        mCO2alveoli = mCO2alveoli - mCO2;
+        
+        nO2 = mO2alveoli/31.9988;
+        nCO2 = mCO2alveoli/44.0095;
+        
+        PaO2alveoli = nO2*tstep*62.36367*1000*310/3;
+        PaCO2alveoli = nCO2*tstep*62.36367*1000*310/3;
+        %}
+        nO2 = mO2/31.9988;
+        nCO2 = mCO2/44.0095;
+        %PV=nRT, P = nRT/V
+        PaO2diff = nO2*62.36367*1000*310/3/1000; %gives pressure in mmHg
+        PaCO2diff = nCO2*62.36367*1000*310/3/1000;
+        PaO2alveoli = PaO2alveoli + PaO2diff;
+        PaCO2alveoli = PaCO2alveoli + PaCO2diff;
+        Ptotal = PaO2alveoli + PaCO2alveoli + PH2O + PN2;
+        PaO2alveoliOverTime(trange)= PaO2alveoli;
+        PaCO2alveoliOverTime(trange)= PaCO2alveoli;
+        mO2overTime(trange) = mO2out;
+        mCO2overTime(trange) = mCO2out;
+        t=t+tstep;
+        trange = trange+1;
+    end 
+    
+    while t<(tin+texp+timeToAlveoli)
+        
+        mO2in = 0.7*(pi*RFin*TV/60)*sin(pi*RFin*t/30)*0.218*dO2*tstep; %insert partial pressures/total pressure or mass frac for humidified air here
+        mCO2in = 0.7*(pi*RFin*TV/60)*sin(pi*RFin*t/30)*0.0003*dCO2*tstep;
+        
+        difRateO2 = -DifCapO2 * (PaO2alveoli - PaO2capillary) *dO2/1000*tstep/60;
+        difRateCO2 = -DifCapCO2 * (PaCO2alveoli - PaCO2capillary) *dCO2/1000*tstep/60;
+        mO2 = difRateO2 + mO2in
+        mCO2 = difRateCO2 + mCO2in
+        %{
+        mO2alveoli = mO2alveoli + mO2;
+        mCO2alveoli = mCO2alveoli - mCO2;
+        
+        nO2 = mO2alveoli/31.9988;
+        nCO2 = mCO2alveoli/44.0095;
+        
+        PaO2alveoli = nO2*tstep*62.36367*1000*310/3;
+        PaCO2alveoli = nCO2*tstep*62.36367*1000*310/3;
+        %}
+        
+        nO2 = mO2/31.9988;
+        nCO2 = mCO2/44.0095;
+        %PV=nRT, P = nRT/V
+        
+        PaO2diff = nO2*62.36367*1000*310/3/1000; %gives pressure in mmHg
+        PaCO2diff = nCO2*62.36367*1000*310/3/1000;
+        PaO2alveoli = PaO2alveoli + PaO2diff;
+        PaCO2alveoli = PaCO2alveoli + PaCO2diff;
         
         mO2overTime(trange) = mO2in;
         mCO2overTime(trange) = mCO2in;
@@ -355,34 +447,8 @@ for x=1:2 %modeling 1 breath
         t=t+tstep;
         trange = trange+1;
     end
-    
-    while t<(tin+texp)
-        %mO2out = ((pi*RFex*TV/60)*sin(pi*RFex*t/30)-0.3*mO2inTotal)*dO2/1000*PaO2alveoli/Ptotal/tstep*60;
-        %mCO2out = ((pi*RFex*TV/60)*sin(pi*RFex*t/30)-0.3*mCO2inTotal)*dCO2/1000*PaCO2alveoli/Ptotal/tstep*60;
-        
-        mO2out = ((pi*RFin*TV/60)*sin(pi*RFin*t/30)*0.7)*dO2/1000*PaO2alveoli/Ptotal*tstep/60;
-        mCO2out = ((pi*RFin*TV/60)*sin(pi*RFin*t/30)*0.7)*dCO2/1000*PaCO2alveoli/Ptotal*tstep/60;
-        
-        difRateO2 = -DifCapO2 * (PaO2alveoli - PaO2capillary)*dO2/1000*tstep/60;
-        difRateCO2 = -DifCapCO2 * (PaCO2alveoli - PaCO2capillary)*dCO2/1000*tstep/60;
-        mO2 = difRateO2 + mO2out;
-        mCO2 = difRateCO2 + mCO2out;
-        nO2 = mO2/31.9988;
-        nCO2 = mCO2/44.0095;
-        %PV=nRT, P = nRT/V
-        PaO2diff = nO2*tstep*62.36367*1000*310/3; %gives pressure in mmHg
-        PaCO2diff = nCO2*tstep*62.36367*1000*310/3;
-        PaO2alveoli = PaO2alveoli + PaO2diff;
-        PaCO2alveoli = PaCO2alveoli + PaCO2diff;
-        Ptotal = PaO2alveoli + PaCO2alveoli + PH2O + PN2;
-        PaO2alveoliOverTime(trange)= PaO2alveoli;
-        PaCO2alveoliOverTime(trange)= PaCO2alveoli;
-        mO2overTime(trange) = mO2out;
-        mCO2overTime(trange) = mCO2out;
-        t=t+tstep;
-        trange = trange+1;
-    end 
-end
+end    
+
 
 resp_range = 0:0.01:length(PaO2alveoliOverTime)*tstep-tstep;
 length(resp_range)
@@ -661,4 +727,3 @@ t_dead_sum = sum(t_dead_gen);
 t_start_6 = t_start_4 + t_dead_sum;
 % t_start_6 = the total time required for air to reach the first alveoli
 end
-
