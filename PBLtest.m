@@ -13,12 +13,13 @@ M = [31.9988 44.0095 28.01348 33.00674];
 TV = 0.5; % liters
 H = 1.73; % height in meters of standard man
 W = 68; % weight in kilograms of standard man
-
+vper1=[20.95 0.033 78.08 0.937];
+%volume percentages of inspired air for O2, CO2, N2, H2O
 PP2 = [116.0 32.0 565.0 47.0];
 % partial pressures in expired air
-PP1 = [158.0 0.3 596.0 5.7]; 
-% partial pressures in inspired air -- not final values we are using, not 
-% 50% humidity
+
+PP1 = partial_pressure_calcs(vper1);
+% partial pressures in inspired air 50% humidity
 PP7 = [100.0 40.0 573.0 47.0];
 % partial pressures in alveolar air
 
@@ -171,6 +172,15 @@ ylabel('Volumetric Flow Rate (L/s)')
 % Q12 = thermal(mass1,c,Ta,Tb)
 % Q13 = thermal(mass1,c,Tb,Ta)
 % % calculates transfer of thermal energy in streams 12 and 13
+end
+
+%function partial_pressure_calc finds the partial pressure of inspired air
+%at 24 degrees Celsius
+%water vapor pressure of water at 24 degrees Celsius is 22.377 mmHg
+%PP1=partial pressure values for inspired air (in mmHg)
+function PP1= partial_pressure_calcs(vper1)
+fracs=vper1./100;
+PP1=(760-22.377).*fracs;
 end
 
 % thermal calculates thermal energy flow rate
