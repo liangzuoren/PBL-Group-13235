@@ -17,7 +17,6 @@ vper1=[20.95 0.033 78.08 0.937];
 %volume percentages of inspired air for O2, CO2, N2, H2O
 PP2 = [116.0 32.0 565.0 47.0];
 % partial pressures in expired air
-
 PP1 = partial_pressure_calcs(vper1);
 % partial pressures in inspired air 50% humidity
 PP7 = [100.0 40.0 573.0 47.0];
