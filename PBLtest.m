@@ -4,8 +4,9 @@ entry
 blood
 end
 
-%Entry box is where inhaled air is humidified and exhaled air leaves the
-%body from
+%Entry unit is where inhaled air is humidified and warmed and exhaled air 
+%leaves the body from
+%physiologically equivalent to the nose, pharynx, larynx, and trachea
 function entry
 M = [31.9988 44.0095 28.01348 33.00674];
 % M = molar mass of each constituent
@@ -16,7 +17,8 @@ W = 68; % weight in kilograms of standard man
 PP2 = [116.0 32.0 565.0 47.0];
 % partial pressures in expired air
 PP1 = [158.0 0.3 596.0 5.7]; 
-% partial pressures in inspired air
+% partial pressures in inspired air -- not final values we are using, not 
+% 50% humidity
 PP7 = [100.0 40.0 573.0 47.0];
 % partial pressures in alveolar air
 
@@ -25,12 +27,14 @@ vfrac1 = PP1 ./ 760;
 vfrac7 = PP7 ./ 760;
 % calculates the volume fractions of the constituents from the partial
 % pressures
+
 % vper4 = humid(vper_1,0.5,50);
 % calculates composition after humidification in Entry unit
 % vfrac6 = vfrac4;
 % the compositions of stream 6 and 4 are equal because stream 4 is
 % the only inlet stream and stream 6 is the only outlet stream of the dead 
 % space unit, and there are no reactions
+
 [RFin,RFex] = RF(H,W);
 % RF calculates the respiration frequencies for inspiration and expiration 
 % based on height and weight
@@ -62,7 +66,7 @@ for i = 1:index_in
     % entry unit is splitter, 30% of flow to Dead Space and 70% to Gas Exchange
 
     % calculate vflow3_in somehow...
-     
+    
     vflow2_in(i) = 0;
     vflow5_in(i) = 0;
     vflow7_in(i) = 0;
@@ -72,6 +76,7 @@ for i = 1:index_in
     % calculates alveolar pressure with respect to time during inspiration
     
 end
+
 for i = 1:index_exp
     vflow2_ex(i) = volumetricflow(RFex,TV,exp_range(i));
     % volumetric flow rate for expiration in L/s
@@ -89,6 +94,8 @@ for i = 1:index_exp
     
 end
 
+[t_start_4,t_start_6] = traveltime(RFin,TV,index_in,insp_range);
+
 Pav = [Pav_in Pav_ex];
 figure
 plot(resp_range,Pav)
@@ -97,17 +104,24 @@ xlabel('Time (s)')
 ylabel('Alveolar Pressure (mmHg)')
 % graph of alveolar pressure over one full respiratory cycle
 
+rg4_i = 0:0.01:t_start_4;
+rg4_e = 0:0.01:0.65;
+for i = 1:length(rg4_i)
+    vflow4_pre(i) = 0;
+end
+for i = 1:length(rg4_e)
+    vflow4_post(i) = 0;
+end
+% adds in zero flow rate to graph for stream 4
+% still need to do for other streams
+
 vflow1 = [vflow1_in vflow1_ex];
 vflow2 = [vflow2_in vflow2_ex];
-% vflow3 = [vflow3_in vflow3_ex];
-vflow4 = [vflow4_in vflow4_ex];
+vflow4 = [vflow4_pre vflow4_in vflow4_ex vflow4_post];
 vflow5 = [vflow5_in vflow5_ex];
 vflow6 = [vflow6_in vflow6_ex];
 vflow7 = [vflow7_in vflow7_ex];
-% combines functions for inspiration and expiration
-
-% calculate Pav_O2 and Pav_CO2 from Pav
-
+% combines functions for entire respiratory cycle
 
 for i = 1:index_resp
     vflow8(i) = 21*60/100*Pav(i);
@@ -120,23 +134,23 @@ for i = 1:index_resp
     % calculate O2 and CO2 transport rate out of the blood to tissues
 end
 
-vflow = [vflow1; vflow2; vflow4; vflow5; vflow6; vflow7; vflow8; ...
-    vflow9; vflow10; vflow11];
 
-t_start_4 = traveltime(RFin,TV,index_in,insp_range)
 
+range_1 = resp_range;
+range_2 = resp_range+2*t_start_6;
+range_4 = 0:0.01:tin+t_start_4;
+range_5 = resp_range+t_start_6*2-t_start_4;
+range_6 = resp_range+t_start_6;
+range_7 = resp_range+t_start_6;
+overall_range = 0:0.01:tresp+t_start_6*2+0.01;
 figure
-plot(resp_range,vflow1,resp_range,vflow2,resp_range,vflow4,resp_range,...
-    vflow5,resp_range,vflow6,resp_range,vflow7)
+plot(resp_range,vflow1,resp_range+2*t_start_6,vflow2,overall_range,...
+    vflow4,resp_range+t_start_6*2-t_start_4,vflow5,resp_range+t_start_6,...
+    vflow6,resp_range+t_start_6,vflow7)
 title('Volumetric Flow Rates of Streams 1, 2, 4, 5, 6, and 7')
 xlabel('Time (s)')
 ylabel('Volumetric Flow Rate (L/s)')
-% figure
-% plot(resp_range,vflow8,resp_range,vflow10,resp_range,vflow9, ...
-    % resp_range,vflow11)
-% title('Volumetric Flow Rate for O2 and CO2 Diffusion')
-
-
+% legend('1','2','4','5','6','7')
 
 % w = massfrac(vper,M);
 % % w = the mass fraction of each constituent in each stream
@@ -171,8 +185,6 @@ dT = Tf - Ti;
 Q = mass * c * dT;
 end
 
-
-
 % massfrac calculates the mass fraction of constituents in a stream
 % vper = the volume percentage of the constituents
 % vfrac = the volume fraction of the constituents
@@ -191,7 +203,6 @@ sum_ratio = sum(mratio);
 w = mratio ./ sum_ratio;
 % mass fractions calculated from mass ratios and sum
 end
-
 
 function vs = constituent_volume(V, w)
 vs = V .* w;
@@ -228,10 +239,11 @@ function d = density(P,M,T)
 R = 62.3637; % if units chosen are mmHg, L, and K
 d = (M * P) / (T * R);
 end
-%{
+
+
 %PV=nRT
 %R=62.36 (L*mmHg)(mol*K)
-
+%{
 % BTP values assumed for function deadspace and function gas_exchange_1
 function values_ds= deadspace(n2,nCO2,nN2,nH2O)
 DSV=0.30*TV;   %30% of the total inhaled air goes to dead space
@@ -246,69 +258,21 @@ m3w3,O2-m4w4,O2=0; %mass flow rate equation for O2
 m3w3,N2-m4w4,N2=0; %mass flow rate equation for N2
 m3w3,H2O-m4w4,H2O=0; %mass flow rate equation for H2O
 end
-
-function values_ge1= gas_exchange_1(nO2_i,nCO2_i,nO2_f,nCO2_f,nN2,nH2O)
-ge1v=0.70*tv; %70% of the total inhaled air goes to the gas exchange 1 box
-VO2_i=(nO2_i*62.36*310)/149.3;  %partial volume of O2 during inhalation
-VCO2_i=(nCO2_i*62.36*310)/0.3; %partial volume of CO2 during inhalation
-VO2_f=(nO2_f*62.36*310)/120; %partial volume of O2 during exhalation
-VCO2_f=(nCO2_f*62.36*310)/27;  %partial volume of CO2 during exhalation
-VN2_i=(nN2*62.36*310)/563.4; %partial volume of N2 during exhalation
-VN2_f=(nN2*62.36*310)/566; %partial volume of N2 during exhalation
-VH2O=(nH2O*62.36*310)/47;  %partial volume of H2O during both inhalation and exhalation
-values_ge1=[VO2_i VCO2_i VO2_f VCO2_f VN2_i VN2_f VH2O];  %partial volumes for gas exchange 1 unit
-Total: m5+m8+m10-m6-m7-m9=0;  %total mass flow rate equation
-m10w10,CO2+m8w8,CO2-m6w6,CO2=0;  %mass flow rate equation for CO2
-m5w5,O2-m9w9,O2-m7w7,O2=0;  %mass flow rate equation for O2
-m5w5,N2-m6w6,N2=0;  %mass flow rate equation for N2
-m5w5,H2O-m6w6,H2O=0;  %mass flow rate equation for H2O
-end
 %}
-
-% % BTP values assumed for function deadspace and function gas_exchange_1
-% function values_ds= deadspace(n2,nCO2,nN2,nH2O)
-% DSV=0.30*TV;   %30% of the total inhaled air goes to dead space
-% VO2=(nO2*62.36*310)/149.3;  %partial volume of O2 during both inhalation and exhalation
-% VCO2=(nCO2*62.36*310)/0.3;  %partial volume of CO2 during both inhalation and exhalation
-% VN2=(nN2*62.36*310)/563.4;  %partial volume of N2 during both inhalation and exhalation
-% VH2O=(nH2O*62.36*310)/47;   %partial volume of H2O during both inhalation and exhalation
-% values_ds=[VO2 VCO2 VN2 VH2O];  %partial volumes for deadspace unit
-% A: m3-m4=0;  %total mass flow rate equation
-% m3w3,CO2-m4w4,CO2=0;  %mass flow rate equation for CO2
-% m3w3,O2-m4w4,O2=0; %mass flow rate equation for O2
-% m3w3,N2-m4w4,N2=0; %mass flow rate equation for N2
-% m3w3,H2O-m4w4,H2O=0; %mass flow rate equation for H2O
-% end
-
-% function values_ge1= gas_exchange_1(nO2_i,nCO2_i,nO2_f,nCO2_f,nN2,nH2O)
-% ge1v=0.70*tv; %70% of the total inhaled air goes to the gas exchange 1 box
-% VO2_i=(nO2_i*62.36*310)/149.3;  %partial volume of O2 during inhalation
-% VCO2_i=(nCO2_i*62.36*310)/0.3; %partial volume of CO2 during inhalation
-% VO2_f=(nO2_f*62.36*310)/120; %partial volume of O2 during exhalation
-% VCO2_f=(nCO2_f*62.36*310)/27;  %partial volume of CO2 during exhalation
-% VN2_i=(nN2*62.36*310)/563.4; %partial volume of N2 during exhalation
-% VN2_f=(nN2*62.36*310)/566; %partial volume of N2 during exhalation
-% VH2O=(nH2O*62.36*310)/47;  %partial volume of H2O during both inhalation and exhalation
-% values_ge1=[VO2_i VCO2_i VO2_f VCO2_f VN2_i VN2_f VH2O];  %partial volumes for gas exchange 1 unit
-% Total: m5+m8+m10-m6-m7-m9=0;  %total mass flow rate equation
-% m10w10,CO2+m8w8,CO2-m6w6,CO2=0;  %mass flow rate equation for CO2
-% m5w5,O2-m9w9,O2-m7w7,O2=0;  %mass flow rate equation for O2
-% m5w5,N2-m6w6,N2=0;  %mass flow rate equation for N2
-% m5w5,H2O-m6w6,H2O=0;  %mass flow rate equation for H2O
-% end
-
 %only for steady state
+
 function blood
-H = 1.73; % height in meters of standard man
-W = 68; % weight in kilograms of standard man
-TV = 0.5; % liters
-[RFin,RFex] = RF(H,W);
+%only for steady state
+
 %vO2inGE2 = 21; %ml/min/mm Hg
 %vO2inGE1 = vO2inGE2/0.7*0.3;
 %vCO2outGE2 = 451;
 %vCO2outGE1 = vCO2outGE2/0.7*0.3;
 %vO2outblood = vO2inGE1 + vO2inGE2;
 %vCO2inblood = vCO2outGE1 + vCO2outGE2;
+H = 1.73; % height in meters of standard man
+W = 68; % weight in kilograms of standard man
+[RFin,RFex] = RF(H,W);
 tin = 30/RFin;
 % RFin is number of breaths per minute, divide by 2 to get number of
 % inspirations per minute and then multiply by 60s/1min to get time of
@@ -326,7 +290,7 @@ Patm = 760;
 PH2O = 47;%presures taken from diagram in assumed values
 PN2 = 573;
 Ptotal = PaO2i+PaCO2i+PH2O+PN2;
-TV = 500; %tidal volume = 500 mL
+TV = 600; %tidal volume = 500 mL
 DifCapO2 = 21; %mL/min/mmHg
 DifCapCO2 = 400; %mL/min/mmHg
 xMax = 2;
@@ -409,6 +373,7 @@ for x=1:2 %modeling 1 breath
         trange = trange+1;
     end 
 end
+
 resp_range = 0:0.01:length(PaO2alveoliOverTime)*tstep-tstep;
 length(resp_range)
 length(PaO2alveoliOverTime)
@@ -468,6 +433,7 @@ end
 function massflowrate = v2m(volumetricflowrate, density)
 massflowrate = volumetricflowrate*density;
 %}
+
 end
 
 %calcuate mass flow rateswith regards to time
@@ -522,7 +488,8 @@ w_f= mass_f ./ mass_tot2;
 vper_h=volumepercentage(mass_f,M);
 end
 
-%volumepercentage function calculates the volume percentages of constituents in a stream 
+%volumepercentage function calculates the volume percentages of 
+%constituents in a stream 
 %based on the amounts of each constituent (in mg)
 %mass_f=mass of all constitiuents (mg)
 %M= molar masses of all constituents (g/mol)
@@ -622,13 +589,30 @@ for i=1:8
 end
 end
 
-% travel time calculates the time of air to travel to different locations
+% traveltime calculates the time of air to travel to different locations
 % in the lungs
-% t_start 4 = the time required for air to travel to the dead space unit
-% region, which will be when flow begins in stream 4
 % t1 = the time to travel through the extrathoracic region
 % t2 = the time required to travel though the trachea
-function t_start_4 = traveltime(RFin,TV,index_in,insp_range)
+% t_start_4 = the time required for air to first reach the dead space unit,
+% (the time required to reach the generation 1 bronchi), which will be when 
+% flow begins in stream 4
+% t_start_6 = the time required for air to first reach the alveoli
+% (generation 17) 
+function [t_start_4,t_start_6] = traveltime(RFin,TV,index_in,insp_range)
+d = [1.539 1.043 0.71 0.479 0.385 0.299 0.239 0.197 0.159 0.132 0.111 ...
+    0.093 0.081 0.07 0.063 0.056 0.051 0.046 0.043 0.04 0.038 0.037 ...
+    0.035 0.035];
+% d = the diameters of each generations of tubes in cm, based on scaled 
+% Weibel A model
+r = d ./ 2;
+% r = the radii of each generation of tubes in cm
+A = pi*r.^2;
+% A = the cross-sectional area of each generation of tubes in cm^2
+l = [10.26 4.07 1.624 0.65 1.086 0.915 0.769 0.65 0.547 0.462 0.393 ...
+    0.333 0.282 0.231 0.197 0.171 0.141 0.121 0.1 0.085 0.071 0.06 ...
+    0.05 0.043];
+% l = the length of each generation of tubes in centimeters
+% the trachea is generation 0, which corresponds to d(1), r(1), and l(1)
 for i = 1:index_in
     int_vflow(i) = -0.5*TV*cos(pi*RFin*insp_range(i)/30)+0.5*TV;
     if abs(int_vflow(i) - 50/1000) < 0.01
@@ -638,13 +622,33 @@ for i = 1:index_in
     end
 end
 for i = 1:index_in
-    if abs(int_vflow(i)*1000/(pi*(1.539/2)^2 - 10.26)) < 0.01
+    if abs(int_vflow(i)*1000/A(1) - l(1)) < 0.1
         t2 = insp_range(i);
-        % int_vflow(i)*1000/(pi*(1.539/2)^2 - 10.26 is the integral of the 
+        % int_vflow(i)*1000/(pi*(r(1))^2 is the integral of the 
         % linear velocity
-        % this integral from 0 to t2 equals the length of the trachea
+        % this integral from 0 to t2 equals the length of the trachea l(1)
     end
 end
+
 t_start_4 = t1 + t2; 
+% the time to first reach the dead space unit (time to reach generation 1 
+% brochi) is the sum of the time to travel through the extrathoracic region 
+% and the time to travel through the trachea
+
+for i = 2:17
+    for j =1:index_in
+        if abs(int_vflow(j)*1000/A(i) - l(i)) < 0.1
+            t_dead_gen(i) = insp_range(j);
+        end
+    end
+end
+
+t_dead_sum = sum(t_dead_gen);
+% the first alveoli appear at generation 17
+% the time to travel from the exit of the trachea to the first alveoli is 
+% the sum of the time to travel though the generation 1 through 16 airways
+
+t_start_6 = t_start_4 + t_dead_sum;
+% t_start_6 = the total time required for air to reach the first alveoli
 end
 
