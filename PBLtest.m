@@ -95,6 +95,7 @@ for i = 1:index_exp
 end
 
 [t_start_4,t_start_6] = traveltime(RFin,TV,index_in,insp_range);
+[t_delay_5,t_delay_7] = traveltime(RFin,TV,index_in,insp_range);
 
 Pav = [Pav_in Pav_ex];
 figure
@@ -234,7 +235,7 @@ end
 % M = molar mass
 % T = temperature
 % R = universal gas constant
-% d = density 
+% d = density in g/L
 
 function d = density(P,M,T)
 R = 62.3637; % if units chosen are mmHg, L, and K
@@ -319,8 +320,8 @@ for x=1:2 %modeling 1 breath
     
     while t<tin
         
-        mO2in = 0.7*(pi*RFin*TV/60)*sin(pi*RFin*t/30)*0.218*dO2/1000*tstep/60; %insert partial pressures/total pressure or mass frac for humidified air here
-        mCO2in = 0.7*(pi*RFin*TV/60)*sin(pi*RFin*t/30)*0.0003*dCO2/1000*tstep/60;
+        mO2in = 0.7*(pi*RFin*TV/60)*sin(pi*RFin*t/30)*0.218*dO2*tstep; %insert partial pressures/total pressure or mass frac for humidified air here
+        mCO2in = 0.7*(pi*RFin*TV/60)*sin(pi*RFin*t/30)*0.0003*dCO2*tstep;
         
         difRateO2 = -DifCapO2 * (PaO2alveoli - PaO2capillary) *dO2/1000*tstep/60;
         difRateCO2 = DifCapCO2 * (PaCO2alveoli - PaCO2capillary) *dCO2/1000*tstep/60;
@@ -351,18 +352,18 @@ for x=1:2 %modeling 1 breath
         %mO2out = ((pi*RFex*TV/60)*sin(pi*RFex*t/30)-0.3*mO2inTotal)*dO2/1000*PaO2alveoli/Ptotal/tstep*60;
         %mCO2out = ((pi*RFex*TV/60)*sin(pi*RFex*t/30)-0.3*mCO2inTotal)*dCO2/1000*PaCO2alveoli/Ptotal/tstep*60;
         
-        mO2out = ((pi*RFin*TV/60)*sin(pi*RFin*t/30)*0.7)*dO2/1000*PaO2alveoli/Ptotal*tstep/60;
-        mCO2out = ((pi*RFin*TV/60)*sin(pi*RFin*t/30)*0.7)*dCO2/1000*PaCO2alveoli/Ptotal*tstep/60;
+        mO2out = ((pi*RFin*TV/60)*sin(pi*RFin*t/30)*0.7)*dO2*PaO2alveoli/Ptotal*tstep;
+        mCO2out = ((pi*RFin*TV/60)*sin(pi*RFin*t/30)*0.7)*dCO2*PaCO2alveoli/Ptotal*tstep;
         
         difRateO2 = -DifCapO2 * (PaO2alveoli - PaO2capillary)*dO2/1000*tstep/60;
         difRateCO2 = -DifCapCO2 * (PaCO2alveoli - PaCO2capillary)*dCO2/1000*tstep/60;
-        mO2 = difRateO2 + mO2out;
-        mCO2 = difRateCO2 + mCO2out;
+        mO2 = difRateO2 + mO2out; %mass in g
+        mCO2 = difRateCO2 + mCO2out; %mass in g
         nO2 = mO2/31.9988;
         nCO2 = mCO2/44.0095;
         %PV=nRT, P = nRT/V
-        PaO2diff = nO2*tstep*62.36367*1000*310/3; %gives pressure in mmHg
-        PaCO2diff = nCO2*tstep*62.36367*1000*310/3;
+        PaO2diff = nO2*tstep*62.36367*310/3; %gives pressure in mmHg
+        PaCO2diff = nCO2*tstep*62.36367*310/3;
         PaO2alveoli = PaO2alveoli + PaO2diff;
         PaCO2alveoli = PaCO2alveoli + PaCO2diff;
         Ptotal = PaO2alveoli + PaCO2alveoli + PH2O + PN2;
