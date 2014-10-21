@@ -143,6 +143,7 @@ range_5 = resp_range+t_start_6*2-t_start_4;
 range_6 = resp_range+t_start_6;
 range_7 = resp_range+t_start_6;
 overall_range = 0:0.01:tresp+t_start_6*2+0.01;
+texp+t_start_6
 figure
 plot(resp_range,vflow1,resp_range+2*t_start_6,vflow2,overall_range,...
     vflow4,resp_range+t_start_6*2-t_start_4,vflow5,resp_range+t_start_6,...
@@ -318,12 +319,12 @@ for x=1:2 %modeling 1 breath
     
     while t<tin
         
-        mO2in = 0.7*(pi*RFin*TV/60)*sin(pi*RFin*t/30)*0.218*dO2/1000*tstep/60 %insert partial pressures/total pressure or mass frac for humidified air here
+        mO2in = 0.7*(pi*RFin*TV/60)*sin(pi*RFin*t/30)*0.218*dO2/1000*tstep/60; %insert partial pressures/total pressure or mass frac for humidified air here
         mCO2in = 0.7*(pi*RFin*TV/60)*sin(pi*RFin*t/30)*0.0003*dCO2/1000*tstep/60;
         
-        difRateO2 = -DifCapO2 * (PaO2alveoli - PaO2capillary) *dO2/1000*tstep/60
+        difRateO2 = -DifCapO2 * (PaO2alveoli - PaO2capillary) *dO2/1000*tstep/60;
         difRateCO2 = DifCapCO2 * (PaCO2alveoli - PaCO2capillary) *dCO2/1000*tstep/60;
-        mO2 = difRateO2 + mO2in
+        mO2 = difRateO2 + mO2in;
         mCO2 = difRateCO2 + mCO2in;
         nO2 = mO2/31.9988;
         nCO2 = mCO2/44.0095;
@@ -350,13 +351,13 @@ for x=1:2 %modeling 1 breath
         %mO2out = ((pi*RFex*TV/60)*sin(pi*RFex*t/30)-0.3*mO2inTotal)*dO2/1000*PaO2alveoli/Ptotal/tstep*60;
         %mCO2out = ((pi*RFex*TV/60)*sin(pi*RFex*t/30)-0.3*mCO2inTotal)*dCO2/1000*PaCO2alveoli/Ptotal/tstep*60;
         
-        mO2out = ((pi*RFin*TV/60)*sin(pi*RFin*t/30)*0.7)*dO2/1000*PaO2alveoli/Ptotal*tstep/60
-        mCO2out = ((pi*RFin*TV/60)*sin(pi*RFin*t/30)*0.7)*dCO2/1000*PaCO2alveoli/Ptotal*tstep/60
+        mO2out = ((pi*RFin*TV/60)*sin(pi*RFin*t/30)*0.7)*dO2/1000*PaO2alveoli/Ptotal*tstep/60;
+        mCO2out = ((pi*RFin*TV/60)*sin(pi*RFin*t/30)*0.7)*dCO2/1000*PaCO2alveoli/Ptotal*tstep/60;
         
         difRateO2 = -DifCapO2 * (PaO2alveoli - PaO2capillary)*dO2/1000*tstep/60;
         difRateCO2 = -DifCapCO2 * (PaCO2alveoli - PaCO2capillary)*dCO2/1000*tstep/60;
         mO2 = difRateO2 + mO2out;
-        mCO2 = difRateCO2 + mCO2out
+        mCO2 = difRateCO2 + mCO2out;
         nO2 = mO2/31.9988;
         nCO2 = mCO2/44.0095;
         %PV=nRT, P = nRT/V
