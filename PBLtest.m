@@ -50,9 +50,7 @@ texp = 30/RFex;
 % expiration
 tresp = tin + texp;
 % sum of inspiration, breathold, and expiration times is the time of one 
-% full respiraory cycle
-
-
+% full respiratory cycle
 
 insp_range = 0:0.01:tin;
 exp_range = 0:0.01:texp;
@@ -63,10 +61,18 @@ index_resp = length(resp_range);
 
 [t_start_4,t_start_6] = traveltime(RFin,TV,index_in,insp_range);
 [t_delay_2,t_delay_7] = traveltime(RFex,TV,index_exp,exp_range);
+% t_start_4 = time for air to reach dead space during inspiration
+% t_start_6 = time for air to reach alveoli during inspiration
+% t_delay_2 = time for air to travel from exit of dead space unit 
+% (connection of main bronchi to trachea) to the exit of the mouth
+% t_delay_7 = time for air to travel from alveolit to exit of mouth during
+% expiration
 tot_t = t_start_6 + tin + t_delay_7 + texp;
+% tot_t = the total time of one respiration cycle
 t_start_7 = t_start_6 + tin;
 t_start_5 = t_start_6 + tin + t_delay_7 - t_delay_2;
 t_start_2 = t_start_6 + tin + t_delay_7;
+% finds the times at which air flow begins in streams 2, 5, and 7
 
 range_1a = 0:0.001:tin-0.001;
 range_1b = tin:0.001:tot_t;
@@ -85,6 +91,9 @@ range_5c = t_start_5+texp:0.001:tot_t;
 range_2a = 0:0.001:t_start_2-0.001;
 range_2b = t_start_2:0.001:tot_t;
 overall_range = 0:0.001:tot_t;
+% sets up ranges for significant sections of time for each stream
+% divided into time ranges of zero flow rate and time range of nonzero flow
+% rate for each stream
 
 index_1a = length(range_1a);
 index_1b = length(range_1b);
@@ -102,7 +111,7 @@ index_5b = length(range_5b);
 index_5c = length(range_5c);
 index_2a = length(range_2a);
 index_2b = length(range_2b);
-
+% indices used in following for loops
 
 for i = 1:index_1a
     vflow1_a(i) = -volumetricflow(RFin,TV,range_1a(i));
@@ -114,6 +123,7 @@ for i = 1:index_1b
     % includes zero flow rates over time interval when there is no flow 
     % rate in stream 1
 end
+% calculates the flow rates of stream 1 over time intervals 1a and 1b
 
 for i = 1:index_4a
     vflow4_a(i) = 0;
@@ -125,6 +135,7 @@ for i = 1:index_4c
     vflow4_c(i) = 0;
 end
 % calculates the flow rates of stream 4 over time intervals 4a,4b,4c
+
 for i = 1:index_6a
     vflow6_a(i) = 0;
 end
@@ -134,6 +145,8 @@ end
 for i = 1:index_6c
     vflow6_c(i) = 0;
 end
+% calculates the flow rates of stream 6 over time intervals 6a,6b,6c
+
 for i = 1:index_7a
     vflow7_a(i) = 0;
 end
@@ -143,6 +156,8 @@ end
 for i = 1:index_7c
     vflow7_c(i) = 0;
 end
+% calculates the flow rates of stream 7 over time intervals 7a,7b,7c
+
 for i = 1:index_5a
     vflow5_a(i) = 0;
 end
@@ -152,12 +167,15 @@ end
 for i = 1:index_5c
     vflow5_c(i) = 0;
 end
+% % calculates the flow rates of stream 5 over time intervals 5a,5b,5c
+
 for i = 1:index_2a
     vflow2_a(i) = 0;
 end
 for i = 1:index_2b
     vflow2_b(i) = volumetricflow(RFex,TV,range_2b(i)-t_start_2);
 end
+% calculates the flow rates of stream 2 over time intervals 2a,2b,2c
 
 vflow1 = [vflow1_a vflow1_b];
 vflow4 = [vflow4_a vflow4_b vflow4_c];
@@ -174,8 +192,9 @@ title('Volumetric Flow Rates of Streams 1, 2, 4, 5, 6, and 7')
 xlabel('Time (s)')
 ylabel('Volumetric Flow Rate (L/s)')
 % legend('1','2','4','5','6','7')
-RV4 = 0;
-composition(vfrac4,overall_range,RFin,TV,RV4,t_start_4)
+% RV4 = 0;
+% composition(vfrac4,overall_range,RFin,TV,RV4,t_start_4)
+
 % w = massfrac(vper,M);
 % % w = the mass fraction of each constituent in each stream
 
