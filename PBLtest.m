@@ -106,12 +106,15 @@ index_2b = length(range_2b);
 
 for i = 1:index_1a
     vflow1_a(i) = -volumetricflow(RFin,TV,range_1a(i));
-    % volumetric flow rate for inspiration in L/s
+    % volumetric flow rate for inspiration in stream 1 in L/s
     % airflow into body defined as negative direction
 end
 for i = 1:index_1b
     vflow1_b(i) = 0;
+    % includes zero flow rates over time interval when there is no flow 
+    % rate in stream 1
 end
+
 for i = 1:index_4a
     vflow4_a(i) = 0;
 end
@@ -121,6 +124,7 @@ end
 for i = 1:index_4c
     vflow4_c(i) = 0;
 end
+% calculates the flow rates of stream 4 over time intervals 4a,4b,4c
 for i = 1:index_6a
     vflow6_a(i) = 0;
 end
@@ -154,111 +158,18 @@ end
 for i = 1:index_2b
     vflow2_b(i) = volumetricflow(RFex,TV,range_2b(i)-t_start_2);
 end
+
 vflow1 = [vflow1_a vflow1_b];
 vflow4 = [vflow4_a vflow4_b vflow4_c];
 vflow6 = [vflow6_a vflow6_b vflow6_c];
 vflow7 = [vflow7_a vflow7_b vflow7_c];
 vflow5 = [vflow5_a vflow5_b vflow5_c];
 vflow2 = [vflow2_a vflow2_b];
-lenover = length(overall_range)
-len1 = length(vflow1)
+% combines functions for entire respiratory cycle
+
 plot(overall_range,vflow1,overall_range,vflow4,overall_range,vflow6,...
     overall_range,vflow7,overall_range,vflow5,overall_range,vflow2)
 
-% for i = 1:index_in
-% vflow1_in(i) = -volumetricflow(RFin,TV,insp_range(i));
-% % volumetric flow rate for inspiration in L/s
-% % airflow into body defined as negative direction
-% 
-% vflow4_in(i) = vflow1_in(i);
-% vflow6_in(i) = 0.7 * vflow1_in(i);
-% % entry unit is splitter, 30% of flow to Dead Space and 70% to Gas Exchange
-% 
-% % calculate vflow3_in somehow...
-% 
-% vflow2_in(i) = 0;
-% vflow5_in(i) = 0;
-% vflow7_in(i) = 0;
-% %zero flow rate in these streams during inspiration
-% 
-% Pav_in(i) = alveolarpressure(vflow1_in(i));
-% % calculates alveolar pressure with respect to time during inspiration
-%     
-% end
-% 
-% for i = 1:index_exp
-%     vflow2_ex(i) = volumetricflow(RFex,TV,exp_range(i));
-%     % volumetric flow rate for expiration in L/s
-%     vflow5_ex(i) = vflow2_ex(i);
-%     vflow7_ex(i) = 0.7*vflow5_ex(i);
-%     
-%     Pav_ex(i) = alveolarpressure(vflow2_ex(i));
-%     % calculates alveolar pressure with respect to time during expiration
-%     
-%     vflow1_ex(i) = 0;
-%     vflow4_ex(i) = 0;
-%     vflow6_ex(i) = 0;
-%     % vflow3_ex = 0;
-%     %zero flow rate in these streams during expiration
-%     
-% end
-% 
-% 
-% length(resp_range)
-% Pav = [Pav_in Pav_ex];
-% figure
-% plot(resp_range,Pav)
-% title('Alveolar Pressure Over One Respiratory Cycle')
-% xlabel('Time (s)')
-% ylabel('Alveolar Pressure (mmHg)')
-% % graph of alveolar pressure over one full respiratory cycle
-% 
-% rg4_i = 0:0.01:t_start_4;
-% rg4_e = 0:0.01:0.65;
-% for i = 1:length(rg4_i)
-%     vflow4_pre(i) = 0;
-% end
-% for i = 1:length(rg4_e)
-%     vflow4_post(i) = 0;
-% end
-% % adds in zero flow rate to graph for stream 4
-% % still need to do for other streams
-% 
-% vflow1 = [vflow1_in vflow1_ex];
-% vflow2 = [vflow2_in vflow2_ex];
-% vflow4 = [vflow4_pre vflow4_in vflow4_ex vflow4_post];
-% vflow5 = [vflow5_in vflow5_ex];
-% vflow6 = [vflow6_in vflow6_ex];
-% vflow7 = [vflow7_in vflow7_ex];
-% % combines functions for entire respiratory cycle
-% 
-% for i = 1:index_resp
-%     vflow8(i) = 21*60/100*Pav(i);
-%     % calculates O2 transport with respect to time
-%     vflow9(i) = 425*60/100*Pav(i);
-%     % calculates CO2 transport with respect to time
-%     vflow10(i) = vflow8(i);
-%     vflow11(i) = vflow9(i);
-%     % solves volumetric flow conservation equations for blood unit to
-%     % calculate O2 and CO2 transport rate out of the blood to tissues
-% end
-% 
-% 
-% 
-% range_1 = resp_range;
-% range_2 = resp_range+2*t_start_6;
-% range_4 = 0:0.01:tin+t_start_4;
-% range_5 = resp_range+t_start_6*2-t_start_4;
-% range_6 = resp_range+t_start_6;
-% range_7 = resp_range+t_start_6;
-% overall_range = 0:0.01:tresp+t_start_6*2+0.01;
-% texp+t_start_6
-% length(overall_range)
-% length(vflow4)
-% figure
-% plot(resp_range,vflow1,resp_range+2*t_start_6,vflow2,overall_range,...
-%     vflow4,resp_range+t_start_6*2-t_start_4,vflow5,resp_range+t_start_6,...
-%     vflow6,resp_range+t_start_6,vflow7)
 title('Volumetric Flow Rates of Streams 1, 2, 4, 5, 6, and 7')
 xlabel('Time (s)')
 ylabel('Volumetric Flow Rate (L/s)')
