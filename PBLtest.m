@@ -1,24 +1,24 @@
 
 function PBLtest
-entry
-blood(0.65)
+t_start_6 = entry;
+blood(t_start_6)
 end
 
 %Entry unit is where inhaled air is humidified and warmed and exhaled air 
 %leaves the body from
 %physiologically equivalent to the nose, pharynx, larynx, and trachea
-function entry
+function t_start_6 = entry
 M = [31.9988 44.0095 28.01348 33.00674];
 % M = molar mass of each constituent
 TV = 0.5; % liters
 H = 1.73; % height in meters of standard man
 W = 68; % weight in kilograms of standard man
-
+vper1=[20.95 0.033 78.08 0.937];
+%volume percentages of inspired air for O2, CO2, N2, H2O
 PP2 = [116.0 32.0 565.0 47.0];
 % partial pressures in expired air
-PP1 = [158.0 0.3 596.0 5.7]; 
-% partial pressures in inspired air -- not final values we are using, not 
-% 50% humidity
+PP1 = partial_pressure_calcs(vper1);
+% partial pressures in inspired air 50% humidity
 PP7 = [100.0 40.0 573.0 47.0];
 % partial pressures in alveolar air
 
@@ -28,6 +28,8 @@ vfrac7 = PP7 ./ 760;
 % calculates the volume fractions of the constituents from the partial
 % pressures
 
+vper_h = humid(TV,vper1,M);
+vfrac4 = vper_h./100;
 % vper4 = humid(vper_1,0.5,50);
 % calculates composition after humidification in Entry unit
 % vfrac6 = vfrac4;
@@ -46,9 +48,9 @@ texp = 30/RFex;
 % RFex is number of breaths per minute, divide by 2 to get number of
 % expirations per minute and then multiply by 60s/1min to get time of
 % expiration
-tresp = tin + texp; % + t_bh
+tresp = tin + texp;
 % sum of inspiration, breathold, and expiration times is the time of one 
-% full respiraory cycle
+% full respiratory cycle
 
 insp_range = 0:0.01:tin;
 exp_range = 0:0.01:texp;
@@ -56,102 +58,142 @@ resp_range = 0:0.01:tresp;
 index_in = length(insp_range);
 index_exp = length(exp_range);
 index_resp = length(resp_range);
-for i = 1:index_in
-    vflow1_in(i) = -volumetricflow(RFin,TV,insp_range(i));
-    % volumetric flow rate for inspiration in L/s
-    % airflow into body defined as negative direction
-    
-    vflow4_in(i) = vflow1_in(i);
-    vflow6_in(i) = 0.7 * vflow1_in(i);
-    % entry unit is splitter, 30% of flow to Dead Space and 70% to Gas Exchange
-
-    % calculate vflow3_in somehow...
-    
-    vflow2_in(i) = 0;
-    vflow5_in(i) = 0;
-    vflow7_in(i) = 0;
-    %zero flow rate in these streams during inspiration
-    
-    Pav_in(i) = alveolarpressure(vflow1_in(i));
-    % calculates alveolar pressure with respect to time during inspiration
-    
-end
-
-for i = 1:index_exp
-    vflow2_ex(i) = volumetricflow(RFex,TV,exp_range(i));
-    % volumetric flow rate for expiration in L/s
-    vflow5_ex(i) = vflow2_ex(i);
-    vflow7_ex(i) = 0.7*vflow5_ex(i);
-    
-    Pav_ex(i) = alveolarpressure(vflow2_ex(i));
-    % calculates alveolar pressure with respect to time during expiration
-    
-    vflow1_ex(i) = 0;
-    vflow4_ex(i) = 0;
-    vflow6_ex(i) = 0;
-    % vflow3_ex = 0;
-    %zero flow rate in these streams during expiration
-    
-end
 
 [t_start_4,t_start_6] = traveltime(RFin,TV,index_in,insp_range);
+[t_delay_2,t_delay_7] = traveltime(RFex,TV,index_exp,exp_range);
+% t_start_4 = time for air to reach dead space during inspiration
+% t_start_6 = time for air to reach alveoli during inspiration
+% t_delay_2 = time for air to travel from exit of dead space unit 
+% (connection of main bronchi to trachea) to the exit of the mouth
+% t_delay_7 = time for air to travel from alveolit to exit of mouth during
+% expiration
+tot_t = t_start_6 + tin + t_delay_7 + texp;
+% tot_t = the total time of one respiration cycle
+t_start_7 = t_start_6 + tin;
+t_start_5 = t_start_6 + tin + t_delay_7 - t_delay_2;
+t_start_2 = t_start_6 + tin + t_delay_7;
+% finds the times at which air flow begins in streams 2, 5, and 7
 
-Pav = [Pav_in Pav_ex];
-figure
-plot(resp_range,Pav)
-title('Alveolar Pressure Over One Respiratory Cycle')
-xlabel('Time (s)')
-ylabel('Alveolar Pressure (mmHg)')
-% graph of alveolar pressure over one full respiratory cycle
+range_1a = 0:0.001:tin-0.001;
+range_1b = tin:0.001:tot_t;
+range_4a = 0:0.001:t_start_4-0.001;
+range_4b = t_start_4:0.001:tin+t_start_4-0.001;
+range_4c = tin+t_start_4:0.001:tot_t;
+range_6a = 0:0.001:t_start_6-0.001;
+range_6b = t_start_6:0.001:t_start_7-0.001;
+range_6c = t_start_7:0.001:tot_t;
+range_7a = 0:0.001:t_start_7-0.001;
+range_7b = t_start_7:0.001:t_start_7+texp-0.001;
+range_7c = t_start_7+texp:0.001:tot_t;
+range_5a = 0:0.001:t_start_5-0.001;
+range_5b = t_start_5:0.001:t_start_5+texp-0.001;
+range_5c = t_start_5+texp:0.001:tot_t;
+range_2a = 0:0.001:t_start_2-0.001;
+range_2b = t_start_2:0.001:tot_t;
+overall_range = 0:0.001:tot_t;
+% sets up ranges for significant sections of time for each stream
+% divided into time ranges of zero flow rate and time range of nonzero flow
+% rate for each stream
 
-rg4_i = 0:0.01:t_start_4;
-rg4_e = 0:0.01:0.65;
-for i = 1:length(rg4_i)
-    vflow4_pre(i) = 0;
+index_1a = length(range_1a);
+index_1b = length(range_1b);
+index_4a = length(range_4a);
+index_4b = length(range_4b);
+index_4c = length(range_4c);
+index_6a = length(range_6a);
+index_6b = length(range_6b);
+index_6c = length(range_6c);
+index_7a = length(range_7a);
+index_7b = length(range_7b);
+index_7c = length(range_7c);
+index_5a = length(range_5a);
+index_5b = length(range_5b);
+index_5c = length(range_5c);
+index_2a = length(range_2a);
+index_2b = length(range_2b);
+% indices used in following for loops
+
+for i = 1:index_1a
+    vflow1_a(i) = -volumetricflow(RFin,TV,range_1a(i));
+    % volumetric flow rate for inspiration in stream 1 in L/s
+    % airflow into body defined as negative direction
 end
-for i = 1:length(rg4_e)
-    vflow4_post(i) = 0;
+for i = 1:index_1b
+    vflow1_b(i) = 0;
+    % includes zero flow rates over time interval when there is no flow 
+    % rate in stream 1
 end
-% adds in zero flow rate to graph for stream 4
-% still need to do for other streams
+% calculates the flow rates of stream 1 over time intervals 1a and 1b
 
-vflow1 = [vflow1_in vflow1_ex];
-vflow2 = [vflow2_in vflow2_ex];
-vflow4 = [vflow4_pre vflow4_in vflow4_ex vflow4_post];
-vflow5 = [vflow5_in vflow5_ex];
-vflow6 = [vflow6_in vflow6_ex];
-vflow7 = [vflow7_in vflow7_ex];
+for i = 1:index_4a
+    vflow4_a(i) = 0;
+end
+for i = 1:index_4b
+    vflow4_b(i) = -volumetricflow(RFin,TV,range_4b(i)-t_start_4);
+end
+for i = 1:index_4c
+    vflow4_c(i) = 0;
+end
+% calculates the flow rates of stream 4 over time intervals 4a,4b,4c
+
+for i = 1:index_6a
+    vflow6_a(i) = 0;
+end
+for i = 1:index_6b
+    vflow6_b(i) = - 0.7 * volumetricflow(RFin,TV,range_6b(i)-t_start_6);
+end
+for i = 1:index_6c
+    vflow6_c(i) = 0;
+end
+% calculates the flow rates of stream 6 over time intervals 6a,6b,6c
+
+for i = 1:index_7a
+    vflow7_a(i) = 0;
+end
+for i = 1:index_7b
+    vflow7_b(i) = 0.7 * volumetricflow(RFex,TV,range_7b(i)-t_start_7);
+end
+for i = 1:index_7c
+    vflow7_c(i) = 0;
+end
+% calculates the flow rates of stream 7 over time intervals 7a,7b,7c
+
+for i = 1:index_5a
+    vflow5_a(i) = 0;
+end
+for i = 1:index_5b
+    vflow5_b(i) = volumetricflow(RFex,TV,range_5b(i)-t_start_5);
+end
+for i = 1:index_5c
+    vflow5_c(i) = 0;
+end
+% % calculates the flow rates of stream 5 over time intervals 5a,5b,5c
+
+for i = 1:index_2a
+    vflow2_a(i) = 0;
+end
+for i = 1:index_2b
+    vflow2_b(i) = volumetricflow(RFex,TV,range_2b(i)-t_start_2);
+end
+% calculates the flow rates of stream 2 over time intervals 2a,2b,2c
+
+vflow1 = [vflow1_a vflow1_b];
+vflow4 = [vflow4_a vflow4_b vflow4_c];
+vflow6 = [vflow6_a vflow6_b vflow6_c];
+vflow7 = [vflow7_a vflow7_b vflow7_c];
+vflow5 = [vflow5_a vflow5_b vflow5_c];
+vflow2 = [vflow2_a vflow2_b];
 % combines functions for entire respiratory cycle
 
-for i = 1:index_resp
-    vflow8(i) = 21*60/100*Pav(i);
-    % calculates O2 transport with respect to time
-    vflow9(i) = 425*60/100*Pav(i);
-    % calculates CO2 transport with respect to time
-    vflow10(i) = vflow8(i);
-    vflow11(i) = vflow9(i);
-    % solves volumetric flow conservation equations for blood unit to
-    % calculate O2 and CO2 transport rate out of the blood to tissues
-end
+plot(overall_range,vflow1,overall_range,vflow4,overall_range,vflow6,...
+    overall_range,vflow7,overall_range,vflow5,overall_range,vflow2)
 
-
-
-range_1 = resp_range;
-range_2 = resp_range+2*t_start_6;
-range_4 = 0:0.01:tin+t_start_4;
-range_5 = resp_range+t_start_6*2-t_start_4;
-range_6 = resp_range+t_start_6;
-range_7 = resp_range+t_start_6;
-overall_range = 0:0.01:tresp+t_start_6*2+0.01;
-texp+t_start_6
-figure
-plot(resp_range,vflow1,resp_range+2*t_start_6,vflow2,overall_range,...
-    vflow4,resp_range+t_start_6*2-t_start_4,vflow5,resp_range+t_start_6,...
-    vflow6,resp_range+t_start_6,vflow7)
 title('Volumetric Flow Rates of Streams 1, 2, 4, 5, 6, and 7')
 xlabel('Time (s)')
 ylabel('Volumetric Flow Rate (L/s)')
 % legend('1','2','4','5','6','7')
+% RV4 = 0;
+% composition(vfrac4,overall_range,RFin,TV,RV4,t_start_4)
 
 % w = massfrac(vper,M);
 % % w = the mass fraction of each constituent in each stream
@@ -173,6 +215,15 @@ ylabel('Volumetric Flow Rate (L/s)')
 % % calculates transfer of thermal energy in streams 12 and 13
 end
 
+%function partial_pressure_calc finds the partial pressure of inspired air
+%at 24 degrees Celsius
+%water vapor pressure of water at 24 degrees Celsius is 22.377 mmHg
+%PP1=partial pressure values for inspired air (in mmHg)
+function PP1= partial_pressure_calcs(vper1)
+fracs=vper1./100;
+PP1=(760-22.377).*fracs;
+end
+
 % thermal calculates thermal energy flow rate
 % Q = amount of thermal energy tranferred in J
 % m = mass of inhaled/exhaled air in kg
@@ -188,16 +239,16 @@ end
 
 % massfrac calculates the mass fraction of constituents in a stream
 % vper = the volume percentage of the constituents
-% vfrac = the volume fraction of the constituents
+% vfrac_temp = the volume fraction of the constituents
 % M = the molar mass of the constituents
 % mratio = the mass ratios of the constituents
 % sum_ratio = the sum of the mass ratios
 % w = the mass fractions of the constituents
 
 function w = massfrac(vper,M)
-vfrac = vper ./ 100;
+vfrac_temp = vper ./ 100;
 % calculates volume fractions from volume percentages
-mratio = M .* vfrac;
+mratio = M .* vfrac_temp;
 % calculates mass ratios from volume fraction and molar mass
 sum_ratio = sum(mratio);
 % sum of mass ratios
@@ -210,7 +261,7 @@ vs = V .* w;
 end
 
 % total mass finds the total mass of inspired air
-% vtot = total volume of inspired air
+% TV = total volume of inspired air
 % pp = partial pressure of a constituent in inspired air
 % Ta = temperature of inspired air
 % R = universal gas constant 
@@ -218,9 +269,9 @@ end
 % species_mass = the mass of each species in inspired air
 % mass1 = the total mass of inspired air
 
-function mass1 = totalmass(vtot,vper,M)
+function mass1 = totalmass(TV,vper,M)
 vfrac = vper ./ 100;
-v = vfrac .* vtot;
+v = vfrac .* TV;
 pp = 760 .* vfrac;
 Ta = 288;
 R = 62.3637;
@@ -598,32 +649,32 @@ end
 %humid function calculates the volume percentages of the air constiuents
 %after is has been humidified from 50% (when inspired) to 100%
 
-%m_i=initial amount of water in air when inspired (mg)
-%m_f=final amount of water in air after humdidification (mg)
-%water_added=total amount of water added to air when it is humidified (mg)
-%mass_tot1=total mass of gas before humidified (mg)
-%mass_tot2= total mass of gas after humidified (mg)
+%m_i=initial amount of water in air when inspired (g)
+%m_f=final amount of water in air after humdidification (g)
+%water_added=total amount of water added to air when it is humidified (g)
+%mass_tot1=total mass of gas before humidified (g)
+%mass_tot2= total mass of gas after humidified (g)
 %w_i= initial mass fractions of gas constiuents before humidified
-%mass_i=amount of each consituent in inhaled air (mg)
-%mass_f=amount of each consituent in humidified air (mg)
+%mass_i=amount of each consituent in inhaled air (g)
+%mass_f=amount of each consituent in humidified air (g)
 %w_f= mass fractions of gas constituents after humidified
 %vper_1=volume percentages of air in stream before it is humidified
 %vper_h= volume percentages of air after it is humidified
-%vtot= volume of air inhaled- 0.5 L in this model
+%VT= volume of air inhaled- 0.5 L in this model
 
 function vper_h=humid(vtot,vper1,M)
-m_i=4.5;
-%at 24 degrees Celsius, amount of water in air before humidified (mg), at
+m_i=.0045; 
+%at 24 degrees Celsius, amount of water in air before humidified (g), at
 %50% humidity, for inspired air
-m_f=22;
-%at 37 degrees Celsius, amount of water in air after humidified (mg), at 100% humidity
+m_f=.022;
+%at 37 degrees Celsius, amount of water in air after humidified (g), at 100% humidity
 water_added=m_f-m_i;
-density=1184; 
-%density of inhaled air (mg/L)
+density=1.184; 
+%density of inhaled air (g/L)
 mass_tot1=density*vtot;
-%total mass of inhaled air (mg)
+%total mass of inhaled air (g)
 mass_tot2=mass_tot1+water_added;
-%total mass of humidifed air (mg)
+%total mass of humidifed air (g)
 w_i=massfrac(vper1,M);   
 %finds mass fractions of all constituents of inhaled air in Stream 1
 mass_i=w_i.*mass_tot1;  
@@ -638,18 +689,17 @@ vper_h=volumepercentage(mass_f,M);
 end
 
 %volumepercentage function calculates the volume percentages of 
-%constituents in a stream 
-%based on the amounts of each constituent (in mg)
+%constituents in a stream based on the mass fractions of each constituent
 %mass_f=mass of all constitiuents (mg)
 %M= molar masses of all constituents (g/mol)
 %v_fracf=volumetric fractions of all gas constituents after humidified
 %vper_f= volume percentages of all gas constituents after humidified
 function vper_f=volumepercentage(mass_f,M)
-nratio=(mass_f/1000)./M;  
+nratio=(mass_f)./M;  
 %calculates number of moles of all gas constituents after humidified
 nratio_sum= sum(nratio);  
 %calculates sum of all moles of gas after humidified
-v_fracf= nratio./nratio_sum;  
+vfrac_f= nratio./nratio_sum;  
 %calculates volumetric fractions (which are equal to mole fractions)
 vper_f=vfrac_f.*100;  
 %finds volume percentages of gas after humidified
@@ -689,13 +739,11 @@ end
  
 %calculates the volume compositions of each constituent in the gas in each
 %unit
-function partial_vol= volume(vper1)
+function partial_vol= volume(PP1)
 pp=zeros(4,8);
 %creates variable to hold the partial pressures for all gas constituents in
 %each unit during respiration
-sum_vper1=sum(vper1);
-vper1_frac=vper1./sum_vper1;
-pp(1,:)=[vper1_frac*760];%partial pressures for entry box during inspiration (mmHg)
+pp(1,:)=[PP1];%partial pressures for entry box during inspiration (mmHg)
 pp(2,:)=[ppf_O2 ppf_CO2 ppf_N2 ppf_H2O];
 %partial pressures for entry box during expiration (mmHg)
 pp(3,:)=[ppi_O2 ppi_CO2 ppi_N2 ppi_H2O];
@@ -710,7 +758,7 @@ pp(7,:)=[ppi_O2 ppi_CO2 ppi_N2 ppi_H2O];
 %partial pressures for cappilaries box during inspiration (mmHg)
 pp(8,:)=[ppf_O2 ppf_CO2 ppf_N2 ppf_H2O];
 %partial pressures for cappilaries box during expiration (mmHg)
-vol=[29.6 150 65 3000];
+vol=[29.6 29.6 150 150 65 65 3000 3000];
 %total volume of each unit (mL)
 sum_pressures=zeros(8,1);
 pp_frac=zeros(8,4);
@@ -747,7 +795,7 @@ end
 % flow begins in stream 4
 % t_start_6 = the time required for air to first reach the alveoli
 % (generation 17) 
-function [t_start_4,t_start_6] = traveltime(RFin,TV,index_in,insp_range)
+function [t_start_4,t_start_6] = traveltime(RF,TV,index,range)
 d = [1.539 1.043 0.71 0.479 0.385 0.299 0.239 0.197 0.159 0.132 0.111 ...
     0.093 0.081 0.07 0.063 0.056 0.051 0.046 0.043 0.04 0.038 0.037 ...
     0.035 0.035];
@@ -762,17 +810,18 @@ l = [10.26 4.07 1.624 0.65 1.086 0.915 0.769 0.65 0.547 0.462 0.393 ...
     0.05 0.043];
 % l = the length of each generation of tubes in centimeters
 % the trachea is generation 0, which corresponds to d(1), r(1), and l(1)
-for i = 1:index_in
-    int_vflow(i) = -0.5*TV*cos(pi*RFin*insp_range(i)/30)+0.5*TV;
+for i = 1:index
+    int_vflow(i) = antiderivative(RF,TV,range(i))- antiderivative(RF,TV,0);
     if abs(int_vflow(i) - 50/1000) < 0.01
-        t1 = insp_range(i);
+        t1 = range(i);
         % the integral of the inspiratory volumetric flow rate from 0 to t1
         % equals the volume of the extrathoracic volume
     end
 end
-for i = 1:index_in
-    if abs(int_vflow(i)*1000/A(1) - l(1)) < 0.1
-        t2 = insp_range(i);
+for i = 1:index
+    x = int_vflow(i)*1000/A(1);
+    if abs(int_vflow(i)*1000/A(1) - l(1)) < 0.5
+        t2 = range(i);
         % int_vflow(i)*1000/(pi*(r(1))^2 is the integral of the 
         % linear velocity
         % this integral from 0 to t2 equals the length of the trachea l(1)
@@ -785,9 +834,9 @@ t_start_4 = t1 + t2;
 % and the time to travel through the trachea
 
 for i = 2:17
-    for j =1:index_in
+    for j =1:index
         if abs(int_vflow(j)*1000/A(i) - l(i)) < 0.1
-            t_dead_gen(i) = insp_range(j);
+            t_dead_gen(i) = range(j);
         end
     end
 end
@@ -800,4 +849,43 @@ t_dead_sum = sum(t_dead_gen);
 t_start_6 = t_start_4 + t_dead_sum;
 % t_start_6 = the total time required for air to reach the first alveoli
 end
+
+%This function finds the volume compositions of gas constituents in the
+%streams where volume composition does not change over time-Stream 1, 4, 6
+%vflow= contains all the flow rates of the diagram
+%vfrac= contains all the volume fractions
+function partial_vol= volume(vflow, vfrac)
+partial_vol=zeros(6,length(vflow));
+for i=1:length(vflow)
+    partial_vol=vfrac.*vflow;
+end
+end
+
+% RV = residual volume that remains in unit
+% only aplies for stream 4 right now
+function composition(vfrac,overall_range,RF,TV,RV,t_start_4)
+V = zeros(4,length(overall_range));
+V(:,1:t_start_4) = RV .* vfrac';
+for i = 1:length(vfrac)
+    for j = t_start_4:length(overall_range)
+        V(i,j) = V(i,j-1) + antiderivative(RF,TV,j)-antiderivative(RF,TV,j-1);
+        for k = 1:length(overall_range)
+            Vs = V(i,:);
+            Vtot(j) = sum(Vs);
+        end
+        vfrac(i,j) = V(i,j)/Vtot(j);
+    end
+end
+plot(overall_range,vfrac(1,:))
+title('Partial Pressure of Oxygen in Stream 4')
+xlabel('Time (s)')
+ylabel('PO2 (mmHg)')
+end
+
+function output = antiderivative(RF,TV,t)
+output = -0.5*TV*cos(pi*RF*t/30);
+end
+
+
+
 
