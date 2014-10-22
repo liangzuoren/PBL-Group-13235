@@ -525,14 +525,14 @@ end
 %humid function calculates the volume percentages of the air constiuents
 %after is has been humidified from 50% (when inspired) to 100%
 
-%m_i=initial amount of water in air when inspired (mg)
-%m_f=final amount of water in air after humdidification (mg)
-%water_added=total amount of water added to air when it is humidified (mg)
-%mass_tot1=total mass of gas before humidified (mg)
-%mass_tot2= total mass of gas after humidified (mg)
+%m_i=initial amount of water in air when inspired (g)
+%m_f=final amount of water in air after humdidification (g)
+%water_added=total amount of water added to air when it is humidified (g)
+%mass_tot1=total mass of gas before humidified (g)
+%mass_tot2= total mass of gas after humidified (g)
 %w_i= initial mass fractions of gas constiuents before humidified
-%mass_i=amount of each consituent in inhaled air (mg)
-%mass_f=amount of each consituent in humidified air (mg)
+%mass_i=amount of each consituent in inhaled air (g)
+%mass_f=amount of each consituent in humidified air (g)
 %w_f= mass fractions of gas constituents after humidified
 %vper_1=volume percentages of air in stream before it is humidified
 %vper_h= volume percentages of air after it is humidified
