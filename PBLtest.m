@@ -635,7 +635,7 @@ pp(7,:)=[ppi_O2 ppi_CO2 ppi_N2 ppi_H2O];
 %partial pressures for cappilaries box during inspiration (mmHg)
 pp(8,:)=[ppf_O2 ppf_CO2 ppf_N2 ppf_H2O];
 %partial pressures for cappilaries box during expiration (mmHg)
-vol=[29.6 150 65 3000];
+vol=[29.6 29.6 150 150 65 65 3000 3000];
 %total volume of each unit (mL)
 sum_pressures=zeros(8,1);
 pp_frac=zeros(8,4);
