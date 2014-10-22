@@ -539,18 +539,18 @@ end
 %vtot= volume of air inhaled- 0.5 L in this model
 
 function vper_h=humid(vtot,vper1,M)
-m_i=4.5;
-%at 24 degrees Celsius, amount of water in air before humidified (mg), at
+m_i=.0045; 
+%at 24 degrees Celsius, amount of water in air before humidified (g), at
 %50% humidity, for inspired air
-m_f=22;
-%at 37 degrees Celsius, amount of water in air after humidified (mg), at 100% humidity
+m_f=.022;
+%at 37 degrees Celsius, amount of water in air after humidified (g), at 100% humidity
 water_added=m_f-m_i;
-density=1184; 
-%density of inhaled air (mg/L)
+density=1.184; 
+%density of inhaled air (g/L)
 mass_tot1=density*vtot;
-%total mass of inhaled air (mg)
+%total mass of inhaled air (g)
 mass_tot2=mass_tot1+water_added;
-%total mass of humidifed air (mg)
+%total mass of humidifed air (g)
 w_i=massfrac(vper1,M);   
 %finds mass fractions of all constituents of inhaled air in Stream 1
 mass_i=w_i.*mass_tot1;  
@@ -572,7 +572,7 @@ end
 %v_fracf=volumetric fractions of all gas constituents after humidified
 %vper_f= volume percentages of all gas constituents after humidified
 function vper_f=volumepercentage(mass_f,M)
-nratio=(mass_f/1000)./M;  
+nratio=(mass_f)./M;  
 %calculates number of moles of all gas constituents after humidified
 nratio_sum= sum(nratio);  
 %calculates sum of all moles of gas after humidified
