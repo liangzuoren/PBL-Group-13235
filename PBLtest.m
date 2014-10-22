@@ -239,16 +239,16 @@ end
 
 % massfrac calculates the mass fraction of constituents in a stream
 % vper = the volume percentage of the constituents
-% vfrac = the volume fraction of the constituents
+% vfrac_temp = the volume fraction of the constituents
 % M = the molar mass of the constituents
 % mratio = the mass ratios of the constituents
 % sum_ratio = the sum of the mass ratios
 % w = the mass fractions of the constituents
 
 function w = massfrac(vper,M)
-vfrac = vper ./ 100;
+vfrac_temp = vper ./ 100;
 % calculates volume fractions from volume percentages
-mratio = M .* vfrac;
+mratio = M .* vfrac_temp;
 % calculates mass ratios from volume fraction and molar mass
 sum_ratio = sum(mratio);
 % sum of mass ratios
@@ -607,8 +607,7 @@ vper_h=volumepercentage(mass_f,M);
 end
 
 %volumepercentage function calculates the volume percentages of 
-%constituents in a stream 
-%based on the amounts of each constituent (in mg)
+%constituents in a stream based on the mass fractions of each constituent
 %mass_f=mass of all constitiuents (mg)
 %M= molar masses of all constituents (g/mol)
 %v_fracf=volumetric fractions of all gas constituents after humidified
@@ -769,7 +768,18 @@ t_start_6 = t_start_4 + t_dead_sum;
 % t_start_6 = the total time required for air to reach the first alveoli
 end
 
-% RV = residual volume that remains in unit 
+%This function finds the volume compositions of gas constituents in the
+%streams where volume composition does not change over time-Stream 1, 4, 6
+%vflow= contains all the flow rates of the diagram
+%vfrac= contains all the volume fractions
+function partial_vol= volume(vflow, vfrac)
+partial_vol=zeros(6,length(vflow));
+for i=1:length(vflow)
+    partial_vol=vfrac.*vflow;
+end
+end
+
+% RV = residual volume that remains in unit
 % only aplies for stream 4 right now
 function composition(vfrac,overall_range,RF,TV,RV,t_start_4)
 V = zeros(4,length(overall_range));
