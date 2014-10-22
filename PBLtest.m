@@ -616,13 +616,11 @@ end
  
 %calculates the volume compositions of each constituent in the gas in each
 %unit
-function partial_vol= volume(vper1)
+function partial_vol= volume(PP1)
 pp=zeros(4,8);
 %creates variable to hold the partial pressures for all gas constituents in
 %each unit during respiration
-sum_vper1=sum(vper1);
-vper1_frac=vper1./sum_vper1;
-pp(1,:)=[vper1_frac*760];%partial pressures for entry box during inspiration (mmHg)
+pp(1,:)=[PP1];%partial pressures for entry box during inspiration (mmHg)
 pp(2,:)=[ppf_O2 ppf_CO2 ppf_N2 ppf_H2O];
 %partial pressures for entry box during expiration (mmHg)
 pp(3,:)=[ppi_O2 ppi_CO2 ppi_N2 ppi_H2O];
