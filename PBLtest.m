@@ -558,32 +558,32 @@ end
 %humid function calculates the volume percentages of the air constiuents
 %after is has been humidified from 50% (when inspired) to 100%
 
-%m_i=initial amount of water in air when inspired (mg)
-%m_f=final amount of water in air after humdidification (mg)
-%water_added=total amount of water added to air when it is humidified (mg)
-%mass_tot1=total mass of gas before humidified (mg)
-%mass_tot2= total mass of gas after humidified (mg)
+%m_i=initial amount of water in air when inspired (g)
+%m_f=final amount of water in air after humdidification (g)
+%water_added=total amount of water added to air when it is humidified (g)
+%mass_tot1=total mass of gas before humidified (g)
+%mass_tot2= total mass of gas after humidified (g)
 %w_i= initial mass fractions of gas constiuents before humidified
-%mass_i=amount of each consituent in inhaled air (mg)
-%mass_f=amount of each consituent in humidified air (mg)
+%mass_i=amount of each consituent in inhaled air (g)
+%mass_f=amount of each consituent in humidified air (g)
 %w_f= mass fractions of gas constituents after humidified
 %vper_1=volume percentages of air in stream before it is humidified
 %vper_h= volume percentages of air after it is humidified
 %VT= volume of air inhaled- 0.5 L in this model
 
-function vper_h=humid(VT,vper1,M)
-m_i=4.5;
-%at 24 degrees Celsius, amount of water in air before humidified (mg), at
+function vper_h=humid(vtot,vper1,M)
+m_i=.0045; 
+%at 24 degrees Celsius, amount of water in air before humidified (g), at
 %50% humidity, for inspired air
-m_f=22;
-%at 37 degrees Celsius, amount of water in air after humidified (mg), at 100% humidity
+m_f=.022;
+%at 37 degrees Celsius, amount of water in air after humidified (g), at 100% humidity
 water_added=m_f-m_i;
-density=1184; 
-%density of inhaled air (mg/L)
-mass_tot1=density*VT;
-%total mass of inhaled air (mg)
+density=1.184; 
+%density of inhaled air (g/L)
+mass_tot1=density*vtot;
+%total mass of inhaled air (g)
 mass_tot2=mass_tot1+water_added;
-%total mass of humidifed air (mg)
+%total mass of humidifed air (g)
 w_i=massfrac(vper1,M);   
 %finds mass fractions of all constituents of inhaled air in Stream 1
 mass_i=w_i.*mass_tot1;  
@@ -605,7 +605,7 @@ end
 %v_fracf=volumetric fractions of all gas constituents after humidified
 %vper_f= volume percentages of all gas constituents after humidified
 function vper_f=volumepercentage(mass_f,M)
-nratio=(mass_f/1000)./M;  
+nratio=(mass_f)./M;  
 %calculates number of moles of all gas constituents after humidified
 nratio_sum= sum(nratio);  
 %calculates sum of all moles of gas after humidified
@@ -649,13 +649,11 @@ end
  
 %calculates the volume compositions of each constituent in the gas in each
 %unit
-function partial_vol= volume(vper1)
+function partial_vol= volume(PP1)
 pp=zeros(4,8);
 %creates variable to hold the partial pressures for all gas constituents in
 %each unit during respiration
-sum_vper1=sum(vper1);
-vper1_frac=vper1./sum_vper1;
-pp(1,:)=[vper1_frac*760];%partial pressures for entry box during inspiration (mmHg)
+pp(1,:)=[PP1];%partial pressures for entry box during inspiration (mmHg)
 pp(2,:)=[ppf_O2 ppf_CO2 ppf_N2 ppf_H2O];
 %partial pressures for entry box during expiration (mmHg)
 pp(3,:)=[ppi_O2 ppi_CO2 ppi_N2 ppi_H2O];
@@ -670,7 +668,7 @@ pp(7,:)=[ppi_O2 ppi_CO2 ppi_N2 ppi_H2O];
 %partial pressures for cappilaries box during inspiration (mmHg)
 pp(8,:)=[ppf_O2 ppf_CO2 ppf_N2 ppf_H2O];
 %partial pressures for cappilaries box during expiration (mmHg)
-vol=[29.6 150 65 3000];
+vol=[29.6 29.6 150 150 65 65 3000 3000];
 %total volume of each unit (mL)
 sum_pressures=zeros(8,1);
 pp_frac=zeros(8,4);
