@@ -69,7 +69,6 @@ t_start_2 = t_start_6 + tin + t_delay_7;
 Volume_deadspace = Volume_deadspace
 Volume_entry = Volume_entry
 
->>>>>>> 5aa0a5d7e798830d669516e451c11e39510598c0
 end
 
 % The airflow function calculates: 
@@ -565,7 +564,7 @@ PaO2alveoli = PaO2i;
 PaCO2alveoli = PaCO2i;
 nN2 = nN2i;
 nH2O = nH2Oi;
-PaO2capillary = 40; %Partial pressure are really good at 65
+PaO2capillary = 60; %Partial pressure are really good at 65
 PaCO2capillary = 46;
 
 mO2overTime = zeros(1,tsize*xMax);
@@ -579,6 +578,7 @@ DiffusionRateO2OverTime = zeros(1,tsize*xMax);
 DiffusionRateCO2OverTime = zeros(1, tsize*xMax);
 BuildupH2O = 0;
 BuildupN2 = 0;
+
 for x=1:xMax %modeling 1 breath
     %t = t_start_6+tin;
     t = 0;
@@ -587,10 +587,11 @@ for x=1:xMax %modeling 1 breath
     
     
     while t<texp
-        mO2out = volumetricflow(RFex, TV, t)*0.7*dO2*PaO2alveoli/Ptotal*tstep;
-        mCO2out = volumetricflow(RFex, TV, t)*0.7*dCO2*PaCO2alveoli/Ptotal*tstep;
-        mH2Oout = volumetricflow(RFex, TV, t)*0.7*dH2O*PH2O/Ptotal*tstep;
-        mN2out = volumetricflow(RFex, TV, t)*0.7*dN2*PN2/Ptotal*tstep;
+
+        mO2out = volumetricflow(RFex, TV, t)*0.7*dO2*tstep*0.15263%0.2042;;%PaO2alveoli/Ptotal*tstep
+        mCO2out = volumetricflow(RFex, TV, t)*0.7*dCO2*tstep*0.0421;%*0.0003;%PaCO2alveoli/Ptotal*tstep
+        mH2Oout = volumetricflow(RFex, TV, t)*0.7*dH2O*tstep*0.0618;%*0.0344;%0.0618;%PH2O/Ptotal*tstep
+        mN2out = volumetricflow(RFex, TV, t)*0.7*dN2*tstep*0.74342;%*0.7611;%0.74342;%PN2/Ptotal*tstep
         %mO2out = ((pi*RFex*TV/60)*sin(pi*RFex*t/30)*0.7)*dO2*PaO2alveoli/Ptotal*tstep;
         %mCO2out = ((pi*RFex*TV/60)*sin(pi*RFex*t/30)*0.7)*dCO2*PaCO2alveoli/Ptotal*tstep;
         %mH2Oout = ((pi*RFex*TV/60)*sin(pi*RFex*t/30)*0.7)*dH2O*PH2O/Ptotal*tstep;
@@ -737,7 +738,6 @@ for x=1:xMax %modeling 1 breath
     t=0;
     
     while t<tin
-        
         mO2in = volumetricflow(RFin, TV, t)*0.7*dO2*0.2042*tstep;
         mCO2in = volumetricflow(RFin, TV, t)*0.7*dCO2*0.0003*tstep;
         mH2Oin = volumetricflow(RFin, TV, t)*0.7*dH2O*0.0344*tstep;
@@ -835,16 +835,18 @@ end
 BuildupN2
 BuildupH2O
 
+Acc = antiderivative(RFex, TV, texp) - antiderivative(RFex, TV, 0);
+Acc = Acc - (antiderivative(RFin, TV, tin) - antiderivative(RFin, TV, 0))
 resp_range = 0:tstep:length(nO2alveoliOverTime)*tstep-tstep;
 size(vPercentOverTime)
 length(nO2alveoliOverTime)
 length(nTotalOverTime)
 length(PTotalOverTime)
 length(vPercentOverTime)
-vPercentOverTime(1,:)= (nO2alveoliOverTime./nTotalOverTime*100); 
-vPercentOverTime(2,:) = (nCO2alveoliOverTime./nTotalOverTime*100);
-vPercentOverTime(3,:) = (nH2OalveoliOverTime./nTotalOverTime*100);
-vPercentOverTime(4,:) = (nN2alveoliOverTime./nTotalOverTime*100);
+vPercentOverTime(1,:)= (nO2alveoliOverTime);%./nTotalOverTime*100); 
+vPercentOverTime(2,:) = (nCO2alveoliOverTime);%./nTotalOverTime*100);
+vPercentOverTime(3,:) = (nH2OalveoliOverTime);%./nTotalOverTime*100);
+vPercentOverTime(4,:) = (nN2alveoliOverTime);%./nTotalOverTime*100);
 figure
 plot(resp_range, PaO2alveoliOverTime);
 title('Partial Pressure of O2 in Alveoli Over Time')
