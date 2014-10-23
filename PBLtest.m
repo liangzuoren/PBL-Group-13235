@@ -238,11 +238,49 @@ figure
 plot(overall_range,volcont1,overall_range,volcont4)
 title('volcont 1 and 4')
 RVentry = 0;
-composition(vfrac1,intflow1,intflow4,intflow5,...
-    intflow2,RVentry,length(overall_range),overall_range)
-
+[VO2entry,VCO2entry,VN2entry,VH2Oentry,Vtotentry,PO2entry,PCO2entry,...
+    PN2entry,PH2Oentry] = composition(vfrac1,intflow1,intflow4,intflow5,...
+    intflow2,RVentry,length(overall_range),overall_range);
+% calculates the volumes and partial pressures of constituents in the entry
+% box over one full respiratory cycle
+figure
+plot(overall_range,PO2entry,overall_range,PCO2entry,overall_range,...
+    PN2entry,overall_range,PH2Oentry)
+title('Partial Pressure of Constituents in Entry Unit')
+xlabel('Time (s)')
+ylabel('Pressure (mmHg)')
+% plots the partial pressures of constituents in the entry box over time
+figure
+plot(overall_range,VO2entry,overall_range,VCO2entry,overall_range,...
+    VN2entry,overall_range,VH2Oentry,overall_range,Vtotentry)
+title('Volume of Constituents in Entry Unit')
+xlabel('Time (s)')
+ylabel(' Volume (L)')
+% plots the volumes of constituents in the entry box over time
 % w = massfrac(vper,M);
 % % w = the mass fraction of each constituent in each stream
+% NEED TO ADD HUMIDIFICATION OCCURING OVER TIME IN ENTRY
+
+RVds = 0;
+[VO2ds,VCO2ds,VN2ds,VH2Ods,Vtotds,PO2ds,PCO2ds,PN2ds,PH2Ods] = ...
+    composition(vfrac4,intflow4,intflow6,intflow7,intflow5,RVds,...
+    length(overall_range),overall_range);
+
+figure
+plot(overall_range,PO2ds,overall_range,PCO2ds,overall_range,...
+    PN2ds,overall_range,PH2Ods)
+title('Partial Pressure of Constituents in Dead Space Unit')
+xlabel('Time (s)')
+ylabel('Pressure (mmHg)')
+% plots the partial pressures of constituents in the dead space unit over 
+% time
+figure
+plot(overall_range,VO2ds,overall_range,VCO2ds,overall_range,...
+    VN2ds,overall_range,VH2Ods,overall_range,Vtotds)
+title('Volume of Constituents in Dead Space Unit')
+xlabel('Time (s)')
+ylabel(' Volume (L)')
+% plots the volumes of constituents in the dead space unit over time
 
 mass1 = totalmass(TV,vfrac1,M);
 % mass1 = the total mass of inspired air
@@ -909,8 +947,8 @@ end
 % intflowout = integral of volumetric flow rate of stream going out of unit
 % For expiration streams, change vfrac(i) to vfracexp(i,j) <-- which we get
 % from Tony's function
-function composition(vfrac,intflowin_in,intflowout_in,intflowin_exp,...
-    intflowout_exp,RV,index,range)
+function [VO2,VCO2,VN2,VH2O,Vtot,PO2,PCO2,PN2,PH2O] = composition(vfrac,...
+    intflowin_in,intflowout_in,intflowin_exp,intflowout_exp,RV,index,range)
 V = zeros(length(vfrac),index);
 V(:,1) = RV .* vfrac';
 Vtot = zeros(1,index);
@@ -943,16 +981,6 @@ PO2 = VO2 ./ Vtot .* 760;
 PCO2 = VCO2 ./ Vtot .* 760;
 PN2 = VN2 ./ Vtot .* 760;
 PH2O = VH2O ./ Vtot .* 760;
-figure
-plot(range,PO2,range,PCO2,range,PN2,range,PH2O)
-title('Partial Pressure of Constituents in Entry Unit')
-xlabel('Time (s)')
-ylabel('Pressure (mmHg)')
-figure
-plot(range,VO2,range,VCO2,range,VN2,range,VH2O,range,Vtot)
-title('Volume of Constituents in Entry Unit')
-xlabel('Time (s)')
-ylabel(' Volume (L)')
 end
 
 function output = antiderivative(RF,TV,t)
