@@ -136,22 +136,14 @@ index_overall = length(overall_range);
 for i = 1:index_1a
     vflow1_a(i) = volumetricflow(RFin,TV,range_1a(i));
     % volumetric flow rate for inspiration in stream 1 in L/s
-    % airflow into body defined as negative direction
+    % airflow into body defined as positive direction
     intflow1_a(i) = - antiderivative(RFin,TV,range_1a(i));
-    vflow1O2_a(i) = vflow1_a(i) * vfrac1(1);
-    vflow1CO2_a(i) = vflow1_a(i) * vfrac1(2);
-    vflow1N2_a(i) = vflow1_a(i) * vfrac1(3);
-    vflow1H2O_a(i) = vflow1_a(i) * vfrac1(4);
 end
 for i = 1:index_1b
     vflow1_b(i) = 0;
     % includes zero flow rates over time interval when there is no flow 
     % rate in stream 1
     intflow1_b(i) = - antiderivative(RFin,TV,range_1a(index_1a));
-    vflow1O2_b(i) = 0;
-    vflow1CO2_b(i) = 0;
-    vflow1N2_b(i) = 0;
-    vflow1H2O_b(i) = 0;
 end
 
 % calculates the flow rates of stream 1 over time intervals 1a and 1b
@@ -159,122 +151,66 @@ end
 for i = 1:index_4a
     vflow4_a(i) = 0;
     intflow4_a(i) = - antiderivative(RFin,TV,range_4b(1)-t_start_4);
-    vflow4O2_a(i) = 0;
-    vflow4CO2_a(i) = 0;
-    vflow4N2_a(i) = 0;
-    vflow4H2O_a(i) = 0;
 end
 for i = 1:index_4b
     vflow4_b(i) = volumetricflow(RFin,TV,range_4b(i)-t_start_4);
     intflow4_b(i) = - antiderivative(RFin,TV,range_4b(i)-t_start_4);
-    vflow4O2_b(i) = vflow4_b(i) * vfrac4(1);
-    vflow4CO2_b(i) = vflow4_b(i) * vfrac4(2);
-    vflow4N2_b(i) = vflow4_b(i) * vfrac4(3);
-    vflow4H2O_b(i) = vflow4_b(i) * vfrac4(4);
 end
 for i = 1:index_4c
     vflow4_c(i) = 0;
     intflow4_c(i) = - antiderivative(RFin,TV,range_4b(index_4b)-t_start_4);
-    vflow4O2_c(i) = 0;
-    vflow4CO2_c(i) = 0;
-    vflow4N2_c(i) = 0;
-    vflow4H2O_c(i) = 0;
 end
 % calculates the flow rates of stream 4 over time intervals 4a,4b,4c
 
 for i = 1:index_6a
     vflow6_a(i) = 0;
     intflow6_a(i) = 0.7 * - antiderivative(RFin,TV,range_6b(1)-t_start_6);
-%     vflow6O2_a(i) = 0;
-%     vflow6CO2_a(i) = 0;
-%     vflow6N2_a(i) = 0;
-%     vflow6H2O_a(i) = 0;
 end
 for i = 1:index_6b
     vflow6_b(i) = 0.7 * volumetricflow(RFin,TV,range_6b(i)-t_start_6);
     intflow6_b(i) = - 0.7 * antiderivative(RFin,TV,range_6b(i)-t_start_6);
-%     vflow6O2_b(i) = 0;
-%     vflow6CO2_b(i) = 0;
-%     vflow6N2_b(i) = 0;
-%     vflow6H2O_b(i) = 0;
 end
 for i = 1:index_6c
     vflow6_c(i) = 0;
     intflow6_c(i) = - 0.7 * antiderivative(RFin,TV,range_6b(index_6b)-t_start_6);
-%     vflow6O2_c(i) = 0;
-%     vflow6CO2_c(i) = 0;
-%     vflow6N2_c(i) = 0;
-%     vflow6H2O_c(i) = 0;
 end
 % calculates the flow rates of stream 6 over time intervals 6a,6b,6c
 
 for i = 1:index_7a
     vflow7_a(i) = 0;
     intflow7_a(i) = 0.7 * antiderivative(RFex,TV,range_7b(1)-t_start_7);
-%     vflow7O2_a(i) = 0;
-%     vflow7CO2_a(i) = 0;
-%     vflow7N2_a(i) = 0;
-%     vflow7H2O_a(i) = 0;
 end
 for i = 1:index_7b
     vflow7_b(i) = - 0.7 * volumetricflow(RFex,TV,range_7b(i)-t_start_7);
     intflow7_b(i) = 0.7 * antiderivative(RFex,TV,range_7b(i)-t_start_7);
-%     vflow7O2_b(i) = vflow7_b * vfrac7(1,i);
-%     vflow7CO2_b(i) = vflow7_b * vfrac7(2,i);
-%     vflow7N2_b(i) = vflow7_b * vfrac7(3,i);
-%     vflow7H2O_b(i) = vflow7_b * vfrac7(4,i);
 end
 for i = 1:index_7c
     vflow7_c(i) = 0;
     intflow7_c(i) = 0.7 * antiderivative(RFex,TV,range_7b(index_7b)-t_start_7);
-%     vflow7O2_c(i) = 0;
-%     vflow7CO2_c(i) = 0;
-%     vflow7N2_c(i) = 0;
-%     vflow7H2O_c(i) = 0;
 end
 % calculates the flow rates of stream 7 over time intervals 7a,7b,7c
 
 for i = 1:index_5a
     vflow5_a(i) = 0;
     intflow5_a(i) = antiderivative(RFex,TV,range_5b(1)-t_start_5);
-%     vflow5O2_a(i) = 0;
-%     vflow5CO2_a(i) = 0;
-%     vflow5N2_a(i) = 0;
-%     vflow5H2O_a(i) = 0;
 end
 for i = 1:index_5b
     vflow5_b(i) = - volumetricflow(RFex,TV,range_5b(i)-t_start_5);
     intflow5_b(i) = antiderivative(RFex,TV,range_5b(i)-t_start_5);
-%     vflow5O2_b(i) = vflow5_b(i) * vfrac7(1,i);
-%     vflow5CO2_b(i) = vflow5_b(i) * vfrac7(2,i);
-%     vflow5N2_b(i) = vflow5_b(i) * vfrac7(3,i);
-%     vflow5H2O_b(i) = vflow5_b(i) * vfrac7(4,i);
 end
 for i = 1:index_5c
     vflow5_c(i) = 0;
     intflow5_c(i) = antiderivative(RFex,TV,range_5b(index_5b)-t_start_5);
-%     vflow5O2_c(i) = 0;
-%     vflow5CO2_c(i) = 0;
-%     vflow5N2_c(i) = 0;
-%     vflow5H2O_c(i) = 0;
 end
 % % calculates the flow rates of stream 5 over time intervals 5a,5b,5c
 
 for i = 1:index_2a
     vflow2_a(i) = 0;
     intflow2_a(i) = antiderivative(RFex,TV,range_2b(1)-t_start_2);
-%     vflow2O2_a(i) = 0;
-%     vflow2CO2_a(i) = 0;
-%     vflow2N2_a(i) = 0;
-%     vflow2H2O_a(i) = 0;
 end
 for i = 1:index_2b
     vflow2_b(i) = - volumetricflow(RFex,TV,range_2b(i)-t_start_2);
     intflow2_b(i) = antiderivative(RFex,TV,range_2b(i)-t_start_2);
-%     vflow2O2_a(i) = 0;
-%     vflow2CO2_a(i) = 0;
-%     vflow2N2_a(i) = 0;
-%     vflow2H2O_a(i) = 0;
 end
 % calculates the flow rates of stream 2 over time intervals 2a,2b,2c
 
@@ -301,10 +237,64 @@ for i = 1:length(vfrac1)
         vflows1(i,j) = vfrac1(i)' * vflow1(j);
     end
 end
+% calculates the volumetric flow rates of constituents in stream 1
+
+for i = 1:length(vfrac4)
+    for j = 1:index_overall
+        vflows4(i,j) = vfrac4(i)' * vflow4(j);
+    end
+end
+% calculates the volumetric flow rates of constituents in stream 4
+
+for i = 1:length(vfrac6)
+    for j = 1:index_overall
+        vflows6(i,j) = vfrac6(i)' * vflow6(j);
+    end
+end
+% calculates the volumetric flow rates of constituents in stream 6
+
+% for i = 1:length(vfrac2)
+%     for j = 1:index_overall
+%         vflows2(i,j) = vfrac2(i,j)' * vflow2(j);
+%     end
+% end
+% % calculates the volumetric flow rates of constituents in stream 2 
+% 
+% for i = 1:length(vfrac5)
+%     for j = 1:index_overall
+%         vflows5(i,j) = vfrac5(i,j)' * vflow5(j);
+%     end
+% end
+% % calculates the volumetric flow rates of constituents in stream 5
+% 
+% for i = 1:length(vfrac7)
+%     for j = 1:index_overall
+%         vflows7(i,j) = vfrac7(i,j)' * vflow7(j);
+%     end
+% end
+% % calculates the volumetric flow rates of constituents in stream 7
 
 figure
-plot(overall_range,vflows1(1,:))
-title('Volumetric Flow Rate of Oxygen in Stream 1')
+plot(overall_range,vflows1(1,:),overall_range,vflows1(2,:),...
+    overall_range,vflows1(3,:),overall_range,vflows1(4,:),overall_range,vflow1)
+title('Volumetric Flow Rate of Constituents in Stream 1')
+xlabel('Time (s)')
+ylabel('Volumetric Flow Rate (L/s)')
+
+figure
+plot(overall_range,vflows4(1,:),overall_range,vflows4(2,:),...
+    overall_range,vflows4(3,:),overall_range,vflows4(4,:),overall_range,vflow4)
+title('Volumetric Flow Rate of Constituents in Stream 4')
+xlabel('Time (s)')
+ylabel('Volumetric Flow Rate (L/s)')
+
+figure
+plot(overall_range,vflows6(1,:),overall_range,vflows6(2,:),...
+    overall_range,vflows6(3,:),overall_range,vflows6(4,:),overall_range,vflow6)
+title('Volumetric Flow Rate of Constituents in Stream 6')
+xlabel('Time (s)')
+ylabel('Volumetric Flow Rate (L/s)')
+
 % volcont1 = zeros(1,index_overall);
 % volcont_temp1(1) = 0;
 % volcont4 = zeros(1,index_overall);
@@ -1064,9 +1054,6 @@ for j = 1:index
         Vtot(j) = sum(Vs);
     end
 end
-figure
-plot(range,Vtot)
-title('Vtot')
 VO2 = V(1,:);
 VCO2 = V(2,:);
 VN2 = V(3,:);
