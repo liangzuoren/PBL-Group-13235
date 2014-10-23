@@ -1,11 +1,11 @@
 % The entry unit is where inhaled air is humidified and warmed and exhaled 
 % air leaves the body from
-% The entry unit is physiologically equivalent to the nose, pharynx, and 
-% larynx
+% The entry unit is physiologically equivalent to the nose, pharynx, 
+% larynx, and trachea
 % The dead space unit is the area where air travels through the unit but no 
 % gas exchange, heat transfer, or humidification occurs
-% The dead space unit is physiologically equivalent to the tracheobronchial
-% region, up to and including generation 16 bronchi
+% The dead space unit is physiologically equivalent to the generation 1 
+% through 16 bronci
 % The gas exchange unit is where gas exchange occurs
 % The gas exchnage unit is physiologically equivalent to the alveoli,
 % including the alveoli of respiratory bronchioles, alveolar ducts, and
@@ -78,8 +78,11 @@ index_in = length(insp_range);
 index_exp = length(exp_range);
 index_resp = length(resp_range);
 
-[t_start_4,t_start_6] = traveltime(RFin,TV,index_in,insp_range);
-[t_delay_2,t_delay_7] = traveltime(RFex,TV,index_exp,exp_range);
+[t_start_4,t_start_6,~,~] = traveltime(RFin,TV,index_in,insp_range);
+[t_delay_2,t_delay_7,Volume_deadspace,Volume_entry] = traveltime...
+    (RFex,TV,index_exp,exp_range);
+Volume_deadspace = Volume_deadspace
+Volume_entry = Volume_entry
 % t_start_4 = time for air to reach dead space during inspiration
 % t_start_6 = time for air to reach alveoli during inspiration
 % t_delay_2 = time for air to travel from exit of dead space unit 
@@ -202,7 +205,7 @@ for i = 1:index_5c
     vflow5_c(i) = 0;
     intflow5_c(i) = antiderivative(RFex,TV,range_5b(index_5b)-t_start_5);
 end
-% % calculates the flow rates of stream 5 over time intervals 5a,5b,5c
+% calculates the flow rates of stream 5 over time intervals 5a,5b,5c
 
 for i = 1:index_2a
     vflow2_a(i) = 0;
@@ -275,6 +278,15 @@ end
 % % calculates the volumetric flow rates of constituents in stream 7
 
 figure
+plot(overall_range,vflow1,overall_range,vflow4,overall_range,vflow6,...
+    overall_range,vflow7,overall_range,vflow5,overall_range,vflow2)
+
+title('Volumetric Flow Rates of Streams 1, 2, 4, 5, 6, and 7')
+xlabel('Time (s)')
+ylabel('Volumetric Flow Rate (L/s)')
+% legend('1','2','4','5','6','7')
+
+figure
 plot(overall_range,vflows1(1,:),overall_range,vflows1(2,:),...
     overall_range,vflows1(3,:),overall_range,vflows1(4,:),overall_range,vflow1)
 title('Volumetric Flow Rate of Constituents in Stream 1')
@@ -307,14 +319,7 @@ ylabel('Volumetric Flow Rate (L/s)')
 % end
 % 
 % test = intflow1(length(range_1a));
-figure
-plot(overall_range,vflow1,overall_range,vflow4,overall_range,vflow6,...
-    overall_range,vflow7,overall_range,vflow5,overall_range,vflow2)
 
-title('Volumetric Flow Rates of Streams 1, 2, 4, 5, 6, and 7')
-xlabel('Time (s)')
-ylabel('Volumetric Flow Rate (L/s)')
-% legend('1','2','4','5','6','7')
 % figure
 % plot(overall_range,intflow1,overall_range,intflow4)
 % title('intflow 1 and 4')
@@ -323,8 +328,9 @@ ylabel('Volumetric Flow Rate (L/s)')
 % title('volcont 1 and 4')
 RVentry = 0;
 [VO2entry,VCO2entry,VN2entry,VH2Oentry,Vtotentry,PO2entry,PCO2entry,...
-    PN2entry,PH2Oentry] = composition(vfrac1,intflow1,intflow4,intflow5,...
-    intflow2,RVentry,length(overall_range),overall_range);
+    PN2entry,PH2Oentry,vperO2entry,vperCO2entry,vperN2entry,...
+    vperH2Oentry] = composition(vfrac1,intflow1,intflow4,intflow5,...
+    intflow2,RVentry,index_overall);
 % calculates the volumes and partial pressures of constituents in the entry
 % box over one full respiratory cycle
 figure
@@ -341,14 +347,21 @@ title('Volume of Constituents in Entry Unit')
 xlabel('Time (s)')
 ylabel(' Volume (L)')
 % plots the volumes of constituents in the entry box over time
+figure
+plot(overall_range,vperO2entry,overall_range,vperCO2entry,overall_range,...
+    vperN2entry,overall_range,vperH2Oentry)
+title('Volume Percentages of Constituents in Entry Unit')
+xlabel('Time (s)')
+ylabel(' Volume Percent (%)')
+
 % w = massfrac(vper,M);
 % % w = the mass fraction of each constituent in each stream
 % NEED TO ADD HUMIDIFICATION OCCURING OVER TIME IN ENTRY
 
 RVds = 0;
-[VO2ds,VCO2ds,VN2ds,VH2Ods,Vtotds,PO2ds,PCO2ds,PN2ds,PH2Ods] = ...
-    composition(vfrac4,intflow4,intflow6,intflow7,intflow5,RVds,...
-    length(overall_range),overall_range);
+[VO2ds,VCO2ds,VN2ds,VH2Ods,Vtotds,PO2ds,PCO2ds,PN2ds,PH2Ods,vperO2ds,...
+    vperCO2ds,vperN2ds,vperH2Ods] = composition(vfrac4,intflow4,...
+    intflow6,intflow7,intflow5,RVds,length(overall_range));
 
 figure
 plot(overall_range,PO2ds,overall_range,PCO2ds,overall_range,...
@@ -366,6 +379,13 @@ xlabel('Time (s)')
 ylabel(' Volume (L)')
 % plots the volumes of constituents in the dead space unit over time
 
+figure
+plot(overall_range,vperO2ds,overall_range,vperCO2ds,overall_range,...
+    vperN2ds,overall_range,vperH2Ods)
+title('Volume Percentages of Constituents in Dead Space')
+xlabel('Time (s)')
+ylabel(' Volume Percent (%)')
+testvol = Vtotds(5)
 mass1 = totalmass(TV,vfrac1,M);
 % mass1 = the total mass of inspired air
 
@@ -960,7 +980,7 @@ end
 % flow begins in stream 4
 % t_start_6 = the time required for air to first reach the alveoli
 % (generation 17) 
-function [t_start_4,t_start_6] = traveltime(RF,TV,index,range)
+function [t_start_4,t_start_6,Volume_deadspace,Volume_entry] = traveltime(RF,TV,index,range)
 d = [1.539 1.043 0.71 0.479 0.385 0.299 0.239 0.197 0.159 0.132 0.111 ...
     0.093 0.081 0.07 0.063 0.056 0.051 0.046 0.043 0.04 0.038 0.037 ...
     0.035 0.035];
@@ -991,15 +1011,18 @@ for j = 1:index
         % this integral from 0 to t2 equals the length of the trachea l(1)
     end
 end
+
+Volume_entry = 50 + pi * r(1)^2 * l(1);
+
 t_start_4 = t1 + t2; 
 % the time to first reach the dead space unit (time to reach generation 1 
 % brochi) is the sum of the time to travel through the extrathoracic region 
 % and the time to travel through the trachea
 
-for j = 2:17
-    for i =1:index
-        if abs(int_vflow(i)*1000/A(j) - l(j)) < 0.01
-            t_dead_gen(i) = range(i);
+for i = 2:17
+    for j =1:index
+        if abs(int_vflow(j)*1000/A(i) - l(i)) < 0.01
+            t_dead_gen(j) = range(j);
         end
     end
 end
@@ -1012,8 +1035,11 @@ t_dead_sum = sum(t_dead_gen);
 t_start_6 = t_start_4 + t_dead_sum;
 % t_start_6 = the total time required for air to reach the first alveoli
 
-% for i = 1:
-% Volume_DS = 
+for i = 2:17
+    Volume(i) = pi * r(i)^2 * l(i) * 2^(i-1);
+end
+Volume_deadspace = sum(Volume);
+% calculates the volume of the dead space unit
 end
 
 %This function finds the volume compositions of gas constituents in the
@@ -1029,10 +1055,11 @@ end
 
 % intflowin = integral of volumetric flow rate of stream going in to unit
 % intflowout = integral of volumetric flow rate of stream going out of unit
-% For expiration streams, change vfrac(i) to vfracexp(i,j) <-- which we get
+% **TO-DO**: For expiration streams, change vfrac(i) to vfracexp(i,j) <-- which we get
 % from Tony's function
-function [VO2,VCO2,VN2,VH2O,Vtot,PO2,PCO2,PN2,PH2O] = composition(vfrac,...
-    intflowin_in,intflowout_in,intflowin_exp,intflowout_exp,RV,index,range)
+function [VO2,VCO2,VN2,VH2O,Vtot,PO2,PCO2,PN2,PH2O,vperO2,vperCO2,...
+    vperN2,vperH2O] = composition(vfrac,intflowin_in,intflowout_in,...
+    intflowin_exp,intflowout_exp,RV,index)
 V = zeros(length(vfrac),index);
 V(:,1) = RV .* vfrac';
 Vtot = zeros(1,index);
@@ -1045,15 +1072,34 @@ for i = 1:length(vfrac)
             intflowout_in(j-1)) + (vfrac(i)*intflowin_exp(j)-vfrac(i)*...
             intflowin_exp(j-1)) - (vfrac(i)*intflowout_exp(j)-vfrac(i)*...
             intflowout_exp(j-1));
+        % calculates the volume of each constituent i in the unit over time 
     end
 end
 
-for j = 1:index
-    for i = 1:length(vfrac)
+for i = 1:length(vfrac)
+    for j = 1:index
         Vs = V(:,j);
         Vtot(j) = sum(Vs);
     end
 end
+% calculates the total volume of each constituent in the unit over time
+
+for i = 1:length(vfrac)
+    for j = 2:index
+        if Vtot(j) == 0
+        vper_s(i,j) = 0;
+        % TO-DO: Why isn't this working?
+        else
+            vper_s(i,j) = V(i,j) ./ Vtot(j) .* 100;
+        end
+    end
+end
+% calculates the volume percent of each constituent in the unit over time
+
+vperO2 = vper_s(1,:);
+vperCO2 = vper_s(2,:);
+vperN2 = vper_s(3,:);
+vperH2O = vper_s(4,:);
 VO2 = V(1,:);
 VCO2 = V(2,:);
 VN2 = V(3,:);
@@ -1062,13 +1108,13 @@ PO2 = VO2 ./ Vtot .* 760;
 PCO2 = VCO2 ./ Vtot .* 760;
 PN2 = VN2 ./ Vtot .* 760;
 PH2O = VH2O ./ Vtot .* 760;
+% TO-DO: can't multiply by 760
 end
 
+% calculates the antiderivative of the volumetric flow rate equation
 function output = antiderivative(RF,TV,t)
 output = -0.5*TV*cos(pi*RF*t/30);
 end
-
-
 
 
 
