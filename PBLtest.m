@@ -1,13 +1,13 @@
 
 function PBLtest
-t_start_6 = entry;
-blood(t_start_6)
+[t_start_6,tin,t_delay_7,texp] = entry
+blood(t_start_6,tin,t_delay_7,texp)
 end
 
 %Entry unit is where inhaled air is humidified and warmed and exhaled air 
 %leaves the body from
 %physiologically equivalent to the nose, pharynx, larynx, and trachea
-function t_start_6 = entry
+function [t_start_6,tin,t_delay_7,texp] = entry
 M = [31.9988 44.0095 28.01348 33.00674];
 % M = molar mass of each constituent
 TV = 0.5; % liters
@@ -52,9 +52,9 @@ tresp = tin + texp;
 % sum of inspiration, breathold, and expiration times is the time of one 
 % full respiratory cycle
 
-insp_range = 0:0.01:tin;
-exp_range = 0:0.01:texp;
-resp_range = 0:0.01:tresp;
+insp_range = 0:0.001:tin;
+exp_range = 0:0.001:texp;
+resp_range = 0:0.001:tresp;
 index_in = length(insp_range);
 index_exp = length(exp_range);
 index_resp = length(resp_range);
@@ -65,29 +65,29 @@ index_resp = length(resp_range);
 % t_start_6 = time for air to reach alveoli during inspiration
 % t_delay_2 = time for air to travel from exit of dead space unit 
 % (connection of main bronchi to trachea) to the exit of the mouth
-% t_delay_7 = time for air to travel from alveolit to exit of mouth during
+% t_delay_7 = time for air to travel from alveoli to exit of mouth during
 % expiration
-tot_t = t_start_6 + tin + t_delay_7 + texp;
+tot_t = t_start_6 + tin + t_delay_7 + texp
 % tot_t = the total time of one respiration cycle
 t_start_7 = t_start_6 + tin;
 t_start_5 = t_start_6 + tin + t_delay_7 - t_delay_2;
 t_start_2 = t_start_6 + tin + t_delay_7;
 % finds the times at which air flow begins in streams 2, 5, and 7
 
-range_1a = 0:0.001:tin-0.001;
-range_1b = tin:0.001:tot_t;
+range_1a = 0:0.001:tin;
+range_1b = tin+0.001:0.001:tot_t;
 range_4a = 0:0.001:t_start_4-0.001;
-range_4b = t_start_4:0.001:tin+t_start_4-0.001;
-range_4c = tin+t_start_4:0.001:tot_t;
+range_4b = t_start_4:0.001:tin+t_start_4;
+range_4c = tin+t_start_4+0.001:0.001:tot_t;
 range_6a = 0:0.001:t_start_6-0.001;
-range_6b = t_start_6:0.001:t_start_7-0.001;
-range_6c = t_start_7:0.001:tot_t;
+range_6b = t_start_6:0.001:t_start_7;
+range_6c = t_start_7+0.001:0.001:tot_t;
 range_7a = 0:0.001:t_start_7-0.001;
-range_7b = t_start_7:0.001:t_start_7+texp-0.001;
-range_7c = t_start_7+texp:0.001:tot_t;
+range_7b = t_start_7:0.001:t_start_7+texp;
+range_7c = t_start_7+texp+0.001:0.001:tot_t;
 range_5a = 0:0.001:t_start_5-0.001;
-range_5b = t_start_5:0.001:t_start_5+texp-0.001;
-range_5c = t_start_5+texp:0.001:tot_t;
+range_5b = t_start_5:0.001:t_start_5+texp;
+range_5c = t_start_5+texp+0.001:0.001:tot_t;
 range_2a = 0:0.001:t_start_2-0.001;
 range_2b = t_start_2:0.001:tot_t;
 overall_range = 0:0.001:tot_t;
@@ -219,8 +219,8 @@ for i = 2:index_overall
     volcont_temp1(i) = volcont1(i);
 end
 plot(overall_range,volcont1)
-title('intflow1')
-
+title('Volume Contributed by Stream 1')
+test = intflow1(length(range_1a));
 plot(overall_range,vflow1,overall_range,vflow4,overall_range,vflow6,...
     overall_range,vflow7,overall_range,vflow5,overall_range,vflow2)
 
@@ -236,7 +236,7 @@ composition(vfrac1,intflow1,intflow4,intflow5,...
 % w = massfrac(vper,M);
 % % w = the mass fraction of each constituent in each stream
 
-% mass1 = totalmass(TV,vper1,M);
+mass1 = totalmass(TV,vfrac1,M);
 % mass1 = the total mass of inspired air
 
 % vs = constituent_volume(V,w);
@@ -245,12 +245,11 @@ composition(vfrac1,intflow1,intflow4,intflow5,...
 % calculate m3
 % can do so based on m1H2O and m6H2O
 
-% c = 1005;
-% Tb = 310; % body temperature
-% Ta = 288; % inspired air temperature
-% Q12 = thermal(mass1,c,Ta,Tb)
-% % calculates transfer of thermal energy in streams 12 transferred from
-% the 
+c = 1005;
+Tb = 310; % body temperature
+Ta = 288; % inspired air temperature
+Q12 = thermal(mass1,c,Ta,Tb)
+% calculates transfer of thermal energy in stream 12 to inspired air
 end
 
 %function partial_pressure_calc finds the partial pressure of inspired air
@@ -307,8 +306,7 @@ end
 % species_mass = the mass of each species in inspired air
 % mass1 = the total mass of inspired air
 
-function mass1 = totalmass(TV,vper,M)
-vfrac = vper ./ 100;
+function mass1 = totalmass(TV,vfrac,M)
 v = vfrac .* TV;
 pp = 760 .* vfrac;
 Ta = 288;
@@ -870,15 +868,13 @@ for i = 1:index
     end
 end
 for i = 1:index
-    x = int_vflow(i)*1000/A(1);
-    if abs(int_vflow(i)*1000/A(1) - l(1)) < 0.5
+    if abs(int_vflow(i)*1000/A(1) - l(1)) < 0.05
         t2 = range(i);
         % int_vflow(i)*1000/(pi*(r(1))^2 is the integral of the 
         % linear velocity
         % this integral from 0 to t2 equals the length of the trachea l(1)
     end
 end
-
 t_start_4 = t1 + t2; 
 % the time to first reach the dead space unit (time to reach generation 1 
 % brochi) is the sum of the time to travel through the extrathoracic region 
@@ -886,7 +882,7 @@ t_start_4 = t1 + t2;
 
 for i = 2:17
     for j =1:index
-        if abs(int_vflow(j)*1000/A(i) - l(i)) < 0.1
+        if abs(int_vflow(j)*1000/A(i) - l(i)) < 0.01
             t_dead_gen(i) = range(j);
         end
     end
@@ -899,6 +895,9 @@ t_dead_sum = sum(t_dead_gen);
 
 t_start_6 = t_start_4 + t_dead_sum;
 % t_start_6 = the total time required for air to reach the first alveoli
+
+% for i = 1:
+% Volume_DS = 
 end
 
 %This function finds the volume compositions of gas constituents in the
