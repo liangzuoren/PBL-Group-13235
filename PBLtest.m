@@ -1,13 +1,33 @@
+% The entry unit is where inhaled air is humidified and warmed and exhaled 
+% air leaves the body from
+% The entry unit is physiologically equivalent to the nose, pharynx, and 
+% larynx
+% The dead space unit is the area where air travels through the unit but no 
+% gas exchange, heat transfer, or humidification occurs
+% The dead space unit is physiologically equivalent to the tracheobronchial
+% region, up to and including generation 16 bronchi
+% The gas exchange unit is where gas exchange occurs
+% The gas exchnage unit is physiologically equivalent to the alveoli,
+% including the alveoli of respiratory bronchioles, alveolar ducts, and
+% alveolar sacs
 
 function PBLtest
-[t_start_6,tin,t_delay_7,texp] = entry;
+[t_start_6,tin,t_delay_7,texp] = airflow;
 % blood(t_start_6,tin,t_delay_7,texp)
 end
 
-%Entry unit is where inhaled air is humidified and warmed and exhaled air 
-%leaves the body from
-%physiologically equivalent to the nose, pharynx, larynx, and trachea
-function [t_start_6,tin,t_delay_7,texp] = entry
+% The airflow function calculates: 
+% The overall volumetric flow rate of streams 1, 2, 3, 4, 5, 6, and 7 over
+% one full respiratory cycle
+% The volumetric flow rate of each constituent in each of these streams 
+% over one full respiratory cycle 
+% The partial pressures of each constituent in the entry and dead space 
+% units over one full respiratory cycle
+% The volume percentages of each constituent in the entry and dead space 
+% units over one full respiratory cycle 
+% Returns graphs for each of these calulations
+
+function [t_start_6,tin,t_delay_7,texp] = airflow
 M = [31.9988 44.0095 28.01348 33.00674];
 % M = molar mass of each constituent
 TV = 0.5; % liters
@@ -30,9 +50,8 @@ vfrac7 = PP7 ./ 760;
 
 vper_h = humid(TV,vper1,M);
 vfrac4 = vper_h./100;
-% vper4 = humid(vper_1,0.5,50);
 % calculates composition after humidification in Entry unit
-% vfrac6 = vfrac4;
+vfrac6 = vfrac4;
 % the compositions of stream 6 and 4 are equal because stream 4 is
 % the only inlet stream and stream 6 is the only outlet stream of the dead 
 % space unit, and there are no reactions
@@ -115,82 +134,147 @@ index_overall = length(overall_range);
 % indices used in following for loops
 
 for i = 1:index_1a
-    vflow1_a(i) = -volumetricflow(RFin,TV,range_1a(i));
+    vflow1_a(i) = volumetricflow(RFin,TV,range_1a(i));
     % volumetric flow rate for inspiration in stream 1 in L/s
     % airflow into body defined as negative direction
-    intflow1_a(i) = -antiderivative(RFin,TV,range_1a(i));
+    intflow1_a(i) = - antiderivative(RFin,TV,range_1a(i));
+    vflow1O2_a(i) = vflow1_a(i) * vfrac1(1);
+    vflow1CO2_a(i) = vflow1_a(i) * vfrac1(2);
+    vflow1N2_a(i) = vflow1_a(i) * vfrac1(3);
+    vflow1H2O_a(i) = vflow1_a(i) * vfrac1(4);
 end
 for i = 1:index_1b
     vflow1_b(i) = 0;
     % includes zero flow rates over time interval when there is no flow 
     % rate in stream 1
-    intflow1_b(i) = -antiderivative(RFin,TV,range_1a(index_1a));
+    intflow1_b(i) = - antiderivative(RFin,TV,range_1a(index_1a));
+    vflow1O2_b(i) = 0;
+    vflow1CO2_b(i) = 0;
+    vflow1N2_b(i) = 0;
+    vflow1H2O_b(i) = 0;
 end
+
 % calculates the flow rates of stream 1 over time intervals 1a and 1b
 
 for i = 1:index_4a
     vflow4_a(i) = 0;
-    intflow4_a(i) = -antiderivative(RFin,TV,range_4b(1)-t_start_4);
+    intflow4_a(i) = - antiderivative(RFin,TV,range_4b(1)-t_start_4);
+    vflow4O2_a(i) = 0;
+    vflow4CO2_a(i) = 0;
+    vflow4N2_a(i) = 0;
+    vflow4H2O_a(i) = 0;
 end
 for i = 1:index_4b
-    vflow4_b(i) = -volumetricflow(RFin,TV,range_4b(i)-t_start_4);
-    intflow4_b(i) = -antiderivative(RFin,TV,range_4b(i)-t_start_4);
+    vflow4_b(i) = volumetricflow(RFin,TV,range_4b(i)-t_start_4);
+    intflow4_b(i) = - antiderivative(RFin,TV,range_4b(i)-t_start_4);
+    vflow4O2_b(i) = vflow4_b(i) * vfrac4(1);
+    vflow4CO2_b(i) = vflow4_b(i) * vfrac4(2);
+    vflow4N2_b(i) = vflow4_b(i) * vfrac4(3);
+    vflow4H2O_b(i) = vflow4_b(i) * vfrac4(4);
 end
 for i = 1:index_4c
     vflow4_c(i) = 0;
-    intflow4_c(i) = -antiderivative(RFin,TV,range_4b(index_4b)-t_start_4);
+    intflow4_c(i) = - antiderivative(RFin,TV,range_4b(index_4b)-t_start_4);
+    vflow4O2_c(i) = 0;
+    vflow4CO2_c(i) = 0;
+    vflow4N2_c(i) = 0;
+    vflow4H2O_c(i) = 0;
 end
 % calculates the flow rates of stream 4 over time intervals 4a,4b,4c
 
 for i = 1:index_6a
     vflow6_a(i) = 0;
-    intflow6_a(i) = - 0.7 * antiderivative(RFin,TV,range_6b(1)-t_start_6);
+    intflow6_a(i) = 0.7 * - antiderivative(RFin,TV,range_6b(1)-t_start_6);
+%     vflow6O2_a(i) = 0;
+%     vflow6CO2_a(i) = 0;
+%     vflow6N2_a(i) = 0;
+%     vflow6H2O_a(i) = 0;
 end
 for i = 1:index_6b
-    vflow6_b(i) = - 0.7 * volumetricflow(RFin,TV,range_6b(i)-t_start_6);
+    vflow6_b(i) = 0.7 * volumetricflow(RFin,TV,range_6b(i)-t_start_6);
     intflow6_b(i) = - 0.7 * antiderivative(RFin,TV,range_6b(i)-t_start_6);
+%     vflow6O2_b(i) = 0;
+%     vflow6CO2_b(i) = 0;
+%     vflow6N2_b(i) = 0;
+%     vflow6H2O_b(i) = 0;
 end
 for i = 1:index_6c
     vflow6_c(i) = 0;
     intflow6_c(i) = - 0.7 * antiderivative(RFin,TV,range_6b(index_6b)-t_start_6);
+%     vflow6O2_c(i) = 0;
+%     vflow6CO2_c(i) = 0;
+%     vflow6N2_c(i) = 0;
+%     vflow6H2O_c(i) = 0;
 end
 % calculates the flow rates of stream 6 over time intervals 6a,6b,6c
 
 for i = 1:index_7a
     vflow7_a(i) = 0;
     intflow7_a(i) = 0.7 * antiderivative(RFex,TV,range_7b(1)-t_start_7);
+%     vflow7O2_a(i) = 0;
+%     vflow7CO2_a(i) = 0;
+%     vflow7N2_a(i) = 0;
+%     vflow7H2O_a(i) = 0;
 end
 for i = 1:index_7b
-    vflow7_b(i) = 0.7 * volumetricflow(RFex,TV,range_7b(i)-t_start_7);
+    vflow7_b(i) = - 0.7 * volumetricflow(RFex,TV,range_7b(i)-t_start_7);
     intflow7_b(i) = 0.7 * antiderivative(RFex,TV,range_7b(i)-t_start_7);
+%     vflow7O2_b(i) = vflow7_b * vfrac7(1,i);
+%     vflow7CO2_b(i) = vflow7_b * vfrac7(2,i);
+%     vflow7N2_b(i) = vflow7_b * vfrac7(3,i);
+%     vflow7H2O_b(i) = vflow7_b * vfrac7(4,i);
 end
 for i = 1:index_7c
     vflow7_c(i) = 0;
     intflow7_c(i) = 0.7 * antiderivative(RFex,TV,range_7b(index_7b)-t_start_7);
+%     vflow7O2_c(i) = 0;
+%     vflow7CO2_c(i) = 0;
+%     vflow7N2_c(i) = 0;
+%     vflow7H2O_c(i) = 0;
 end
 % calculates the flow rates of stream 7 over time intervals 7a,7b,7c
 
 for i = 1:index_5a
     vflow5_a(i) = 0;
     intflow5_a(i) = antiderivative(RFex,TV,range_5b(1)-t_start_5);
+%     vflow5O2_a(i) = 0;
+%     vflow5CO2_a(i) = 0;
+%     vflow5N2_a(i) = 0;
+%     vflow5H2O_a(i) = 0;
 end
 for i = 1:index_5b
-    vflow5_b(i) = volumetricflow(RFex,TV,range_5b(i)-t_start_5);
+    vflow5_b(i) = - volumetricflow(RFex,TV,range_5b(i)-t_start_5);
     intflow5_b(i) = antiderivative(RFex,TV,range_5b(i)-t_start_5);
+%     vflow5O2_b(i) = vflow5_b(i) * vfrac7(1,i);
+%     vflow5CO2_b(i) = vflow5_b(i) * vfrac7(2,i);
+%     vflow5N2_b(i) = vflow5_b(i) * vfrac7(3,i);
+%     vflow5H2O_b(i) = vflow5_b(i) * vfrac7(4,i);
 end
 for i = 1:index_5c
     vflow5_c(i) = 0;
     intflow5_c(i) = antiderivative(RFex,TV,range_5b(index_5b)-t_start_5);
+%     vflow5O2_c(i) = 0;
+%     vflow5CO2_c(i) = 0;
+%     vflow5N2_c(i) = 0;
+%     vflow5H2O_c(i) = 0;
 end
 % % calculates the flow rates of stream 5 over time intervals 5a,5b,5c
 
 for i = 1:index_2a
     vflow2_a(i) = 0;
     intflow2_a(i) = antiderivative(RFex,TV,range_2b(1)-t_start_2);
+%     vflow2O2_a(i) = 0;
+%     vflow2CO2_a(i) = 0;
+%     vflow2N2_a(i) = 0;
+%     vflow2H2O_a(i) = 0;
 end
 for i = 1:index_2b
-    vflow2_b(i) = volumetricflow(RFex,TV,range_2b(i)-t_start_2);
+    vflow2_b(i) = - volumetricflow(RFex,TV,range_2b(i)-t_start_2);
     intflow2_b(i) = antiderivative(RFex,TV,range_2b(i)-t_start_2);
+%     vflow2O2_a(i) = 0;
+%     vflow2CO2_a(i) = 0;
+%     vflow2N2_a(i) = 0;
+%     vflow2H2O_a(i) = 0;
 end
 % calculates the flow rates of stream 2 over time intervals 2a,2b,2c
 
@@ -203,7 +287,6 @@ vflow2 = [vflow2_a vflow2_b];
 % combines the sections of the volumetric flow rate function for the entire 
 % respiratory cycle
 
-
 intflow1 = [intflow1_a intflow1_b];
 intflow4 = [intflow4_a intflow4_b intflow4_c];
 intflow6 = [intflow6_a intflow6_b intflow6_c];
@@ -212,18 +295,29 @@ intflow5 = [intflow5_a intflow5_b intflow5_c];
 intflow2 = [intflow2_a intflow2_b];
 % combines the sections of the integrals of the volumetric flow rate 
 % function for the entire respiratory cycle
-volcont1 = zeros(1,index_overall);
-volcont_temp1(1) = 0;
-volcont4 = zeros(1,index_overall);
-volcont_temp4(1) = 0;
-for i = 2:index_overall
-    volcont1(i) = volcont_temp1(i-1) + intflow1(i) - intflow1(i-1);
-    volcont_temp1(i) = volcont1(i);
-    volcont4(i) = volcont_temp4(i-1) + intflow4(i) - intflow4(i-1);
-    volcont_temp4(i) = volcont4(i);
+
+for i = 1:length(vfrac1)
+    for j = 1:index_overall
+        vflows1(i,j) = vfrac1(i)' * vflow1(j);
+    end
 end
 
-test = intflow1(length(range_1a));
+figure
+plot(overall_range,vflows1(1,:))
+title('Volumetric Flow Rate of Oxygen in Stream 1')
+% volcont1 = zeros(1,index_overall);
+% volcont_temp1(1) = 0;
+% volcont4 = zeros(1,index_overall);
+% volcont_temp4(1) = 0;
+% for i = 2:index_overall
+%     volcont1(i) = volcont_temp1(i-1) + intflow1(i) - intflow1(i-1);
+%     volcont_temp1(i) = volcont1(i);
+%     volcont4(i) = volcont_temp4(i-1) + intflow4(i) - intflow4(i-1);
+%     volcont_temp4(i) = volcont4(i);
+% end
+% 
+% test = intflow1(length(range_1a));
+figure
 plot(overall_range,vflow1,overall_range,vflow4,overall_range,vflow6,...
     overall_range,vflow7,overall_range,vflow5,overall_range,vflow2)
 
@@ -231,12 +325,12 @@ title('Volumetric Flow Rates of Streams 1, 2, 4, 5, 6, and 7')
 xlabel('Time (s)')
 ylabel('Volumetric Flow Rate (L/s)')
 % legend('1','2','4','5','6','7')
-figure
-plot(overall_range,intflow1,overall_range,intflow4)
-title('intflow 1 and 4')
-figure 
-plot(overall_range,volcont1,overall_range,volcont4)
-title('volcont 1 and 4')
+% figure
+% plot(overall_range,intflow1,overall_range,intflow4)
+% title('intflow 1 and 4')
+% figure 
+% plot(overall_range,volcont1,overall_range,volcont4)
+% title('volcont 1 and 4')
 RVentry = 0;
 [VO2entry,VCO2entry,VN2entry,VH2Oentry,Vtotentry,PO2entry,PCO2entry,...
     PN2entry,PH2Oentry] = composition(vfrac1,intflow1,intflow4,intflow5,...
