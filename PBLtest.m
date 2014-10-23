@@ -1,7 +1,7 @@
 
 function PBLtest
 [t_start_6,tin,t_delay_7,texp] = entry;
-blood(t_start_6,tin,t_delay_7,texp)
+% blood(t_start_6,tin,t_delay_7,texp)
 end
 
 %Entry unit is where inhaled air is humidified and warmed and exhaled air 
@@ -124,13 +124,13 @@ for i = 1:index_1b
     vflow1_b(i) = 0;
     % includes zero flow rates over time interval when there is no flow 
     % rate in stream 1
-    intflow1_b(i) = 0;
+    intflow1_b(i) = -antiderivative(RFin,TV,range_1a(index_1a));
 end
 % calculates the flow rates of stream 1 over time intervals 1a and 1b
 
 for i = 1:index_4a
     vflow4_a(i) = 0;
-    intflow4_a(i) = 0;
+    intflow4_a(i) = -antiderivative(RFin,TV,range_4b(1)-t_start_4);
 end
 for i = 1:index_4b
     vflow4_b(i) = -volumetricflow(RFin,TV,range_4b(i)-t_start_4);
@@ -138,13 +138,13 @@ for i = 1:index_4b
 end
 for i = 1:index_4c
     vflow4_c(i) = 0;
-    intflow4_c(i) = 0;
+    intflow4_c(i) = -antiderivative(RFin,TV,range_4b(index_4b)-t_start_4);
 end
 % calculates the flow rates of stream 4 over time intervals 4a,4b,4c
 
 for i = 1:index_6a
     vflow6_a(i) = 0;
-    intflow6_a(i) = 0;
+    intflow6_a(i) = - 0.7 * antiderivative(RFin,TV,range_6b(1)-t_start_6);
 end
 for i = 1:index_6b
     vflow6_b(i) = - 0.7 * volumetricflow(RFin,TV,range_6b(i)-t_start_6);
@@ -152,13 +152,13 @@ for i = 1:index_6b
 end
 for i = 1:index_6c
     vflow6_c(i) = 0;
-    intflow6_c(i) = 0;
+    intflow6_c(i) = - 0.7 * antiderivative(RFin,TV,range_6b(index_6b)-t_start_6);
 end
 % calculates the flow rates of stream 6 over time intervals 6a,6b,6c
 
 for i = 1:index_7a
     vflow7_a(i) = 0;
-    intflow7_a(i) = 0;
+    intflow7_a(i) = 0.7 * antiderivative(RFex,TV,range_7b(1)-t_start_7);
 end
 for i = 1:index_7b
     vflow7_b(i) = 0.7 * volumetricflow(RFex,TV,range_7b(i)-t_start_7);
@@ -166,13 +166,13 @@ for i = 1:index_7b
 end
 for i = 1:index_7c
     vflow7_c(i) = 0;
-    intflow7_c(i) = 0;
+    intflow7_c(i) = 0.7 * antiderivative(RFex,TV,range_7b(index_7b)-t_start_7);
 end
 % calculates the flow rates of stream 7 over time intervals 7a,7b,7c
 
 for i = 1:index_5a
     vflow5_a(i) = 0;
-    intflow5_a(i) = 0;
+    intflow5_a(i) = antiderivative(RFex,TV,range_5b(1)-t_start_5);
 end
 for i = 1:index_5b
     vflow5_b(i) = volumetricflow(RFex,TV,range_5b(i)-t_start_5);
@@ -180,13 +180,13 @@ for i = 1:index_5b
 end
 for i = 1:index_5c
     vflow5_c(i) = 0;
-    intflow5_c(i) = 0;
+    intflow5_c(i) = antiderivative(RFex,TV,range_5b(index_5b)-t_start_5);
 end
 % % calculates the flow rates of stream 5 over time intervals 5a,5b,5c
 
 for i = 1:index_2a
     vflow2_a(i) = 0;
-    intflow2_a(i) = 0;
+    intflow2_a(i) = antiderivative(RFex,TV,range_2b(1)-t_start_2);
 end
 for i = 1:index_2b
     vflow2_b(i) = volumetricflow(RFex,TV,range_2b(i)-t_start_2);
@@ -214,12 +214,15 @@ intflow2 = [intflow2_a intflow2_b];
 % function for the entire respiratory cycle
 volcont1 = zeros(1,index_overall);
 volcont_temp1(1) = 0;
+volcont4 = zeros(1,index_overall);
+volcont_temp4(1) = 0;
 for i = 2:index_overall
     volcont1(i) = volcont_temp1(i-1) + intflow1(i) - intflow1(i-1);
     volcont_temp1(i) = volcont1(i);
+    volcont4(i) = volcont_temp4(i-1) + intflow4(i) - intflow4(i-1);
+    volcont_temp4(i) = volcont4(i);
 end
-plot(overall_range,volcont1)
-title('Volume Contributed by Stream 1')
+
 test = intflow1(length(range_1a));
 plot(overall_range,vflow1,overall_range,vflow4,overall_range,vflow6,...
     overall_range,vflow7,overall_range,vflow5,overall_range,vflow2)
@@ -228,7 +231,12 @@ title('Volumetric Flow Rates of Streams 1, 2, 4, 5, 6, and 7')
 xlabel('Time (s)')
 ylabel('Volumetric Flow Rate (L/s)')
 % legend('1','2','4','5','6','7')
-
+figure
+plot(overall_range,intflow1,overall_range,intflow4)
+title('intflow 1 and 4')
+figure 
+plot(overall_range,volcont1,overall_range,volcont4)
+title('volcont 1 and 4')
 RVentry = 0;
 composition(vfrac1,intflow1,intflow4,intflow5,...
     intflow2,RVentry,length(overall_range),overall_range)
@@ -845,17 +853,17 @@ l = [10.26 4.07 1.624 0.65 1.086 0.915 0.769 0.65 0.547 0.462 0.393 ...
     0.05 0.043];
 % l = the length of each generation of tubes in centimeters
 % the trachea is generation 0, which corresponds to d(1), r(1), and l(1)
-for i = 1:index
-    int_vflow(i) = antiderivative(RF,TV,range(i))- antiderivative(RF,TV,0);
-    if abs(int_vflow(i) - 50/1000) < 0.01
-        t1 = range(i);
+for j = 1:index
+    int_vflow(j) = antiderivative(RF,TV,range(j))- antiderivative(RF,TV,0);
+    if abs(int_vflow(j) - 50/1000) < 0.01
+        t1 = range(j);
         % the integral of the inspiratory volumetric flow rate from 0 to t1
         % equals the volume of the extrathoracic volume
     end
 end
-for i = 1:index
-    if abs(int_vflow(i)*1000/A(1) - l(1)) < 0.05
-        t2 = range(i);
+for j = 1:index
+    if abs(int_vflow(j)*1000/A(1) - l(1)) < 0.05
+        t2 = range(j);
         % int_vflow(i)*1000/(pi*(r(1))^2 is the integral of the 
         % linear velocity
         % this integral from 0 to t2 equals the length of the trachea l(1)
@@ -866,10 +874,10 @@ t_start_4 = t1 + t2;
 % brochi) is the sum of the time to travel through the extrathoracic region 
 % and the time to travel through the trachea
 
-for i = 2:17
-    for j =1:index
-        if abs(int_vflow(j)*1000/A(i) - l(i)) < 0.01
-            t_dead_gen(i) = range(j);
+for j = 2:17
+    for i =1:index
+        if abs(int_vflow(i)*1000/A(j) - l(j)) < 0.01
+            t_dead_gen(i) = range(i);
         end
     end
 end
