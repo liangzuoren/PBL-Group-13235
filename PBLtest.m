@@ -1,13 +1,13 @@
 
 function PBLtest
-t_start_6 = entry;
-blood(t_start_6)
+[t_start_6, t_start_7] = entry;
+blood(t_start_6, t_start_7)
 end
 
 %Entry unit is where inhaled air is humidified and warmed and exhaled air 
 %leaves the body from
 %physiologically equivalent to the nose, pharynx, larynx, and trachea
-function t_start_6 = entry
+function [t_start_6, t_start_7] = entry
 M = [31.9988 44.0095 28.01348 33.00674];
 % M = molar mass of each constituent
 TV = 0.5; % liters
@@ -313,7 +313,7 @@ end
 %}
 %only for steady state
 
-function blood(timeToAlveoli)
+function blood(timeToAlveoli, tinspire)
 %only for steady state
 
 %vO2inGE2 = 21; %ml/min/mm Hg
@@ -325,11 +325,11 @@ function blood(timeToAlveoli)
 H = 1.73; % height in meters of standard man
 W = 68; % weight in kilograms of standard man
 [RFin,RFex] = RF(H,W);
-tin = 30/RFin;
+tin = 30/RFin
 % RFin is number of breaths per minute, divide by 2 to get number of
 % inspirations per minute and then multiply by 60s/1min to get time of
 % inspiration
-texp = 30/RFex;
+texp = 30/RFex
 % RFex is number of breaths per minute, divide by 2 to get number of
 % exspirations per minute and then multiply by 60s/1min to get time of
 % exspiration
@@ -338,14 +338,13 @@ tresp = tin + texp +timeToAlveoli;
 % frequencies
 PaO2i = 100;%100 mmHg partial pressure in beginning for O2
 PaCO2i = 40;%40 mmHg partial pressure in beginning for CO2
-Patm = 760; 
 PH2O = 47;%presures taken from diagram in assumed values
 PN2 = 573;
-Ptotal = PaO2i+PaCO2i+PH2O+PN2;
+Ptotal = PaO2i+PaCO2i+PH2O+PN2
 TV = 0.5; %tidal volume = 500 mL O2 perfect at 0.9
 DifCapO2 = 21; %mL/min/mmHg
 DifCapCO2 = 400; %mL/min/mmHg
-xMax = 10;
+xMax = 3;
 dO2 =  density(760, 31.9988, 310); %1 atm, 31.9988 g/mol, 310 K(body temperature)
 dCO2 = density(760, 44.0095, 310); %1 atm, 44.0095 g/mol, 310 K(body temperature)
 trange = 1;
@@ -360,24 +359,22 @@ PN2alveoliOverTime = zeros(1, tsize*xMax);
 PaO2alveoli = PaO2i;
 PaCO2alveoli = PaCO2i;
 vTotal = vTotalInitial;
-PaO2capillary = 40;
+PaO2capillary = 40; %Partial pressure are really good at 70
 PaCO2capillary = 46;
 
 mO2overTime = zeros(1,tsize*xMax);
 mCO2overTime = zeros(1,tsize*xMax);
 vPercentOverTime = zeros(4, tsize*xMax);
 PTotalOverTime = zeros(1, tsize*xMax);
-
+DifferenceO2OverTime = zeros(1,tsize*xMax);
 
 for x=1:xMax %modeling 1 breath
-    t=tin+timeToAlveoli;
+    tin=tinspire-timeToAlveoli;
+    t = tinspire;
     mO2inTotal = 0;
     mCO2inTotal = 0;
-    Pinspiredair = [158.0 0.3 5.7 596.0];
-    %PaO2alveoli = PaO2i;
-    %PaCO2alveoli = PaCO2i;
     
-    while t<tin+timeToAlveoli+texp
+    while t<tinspire+texp
         %mO2out = ((pi*RFex*TV/60)*sin(pi*RFex*t/30)-0.3*mO2inTotal)*dO2/1000*PaO2alveoli/Ptotal/tstep*60;
         %mCO2out = ((pi*RFex*TV/60)*sin(pi*RFex*t/30)-0.3*mCO2inTotal)*dCO2/1000*PaCO2alveoli/Ptotal/tstep*60;
         
@@ -397,8 +394,7 @@ for x=1:xMax %modeling 1 breath
         if mN2out > 0
         mN2out = mN2out*-1;
         end
-        mN2out
-        
+        DifferenceO2OverTime(trange) = (PaO2capillary - PaO2alveoli);
         %difRateO2 = -DifCapO2 * (PaO2alveoli - PaO2capillary)*dO2/1000*tstep/60;
         %difRateCO2 = -DifCapCO2 * (PaCO2alveoli - PaCO2capillary)*dCO2/1000*tstep/60;
         
@@ -415,20 +411,8 @@ for x=1:xMax %modeling 1 breath
         difRateCO2 = -DifCapCO2 * (PaCO2alveoli - PaCO2capillary) *dCO2/1000*tstep/60;
         end
         
-        
         mO2 = difRateO2 + mO2out;
         mCO2 = difRateCO2 + mCO2out;
-        %{
-        mO2alveoli = mO2alveoli + mO2;
-        
-        mCO2alveoli = mCO2alveoli - mCO2;
-        
-        nO2 = mO2alveoli/31.9988;
-        nCO2 = mCO2alveoli/44.0095;
-        
-        PaO2alveoli = nO2*tstep*62.36367*1000*310/3;
-        PaCO2alveoli = nCO2*tstep*62.36367*1000*310/3;
-        %}
         nO2 = mO2/31.9988;
         nCO2 = mCO2/44.0095;
         nN2 = mN2out/28.014;
@@ -440,14 +424,14 @@ for x=1:xMax %modeling 1 breath
         PN2diff = nN2*62.36367*1000*310/vTotal;
         PH2Odiff = nH2O*62.36367*1000*310/vTotal;
         
-        nTotal = PaO2alveoli*vTotal/310/62.36367/1000;
+        nTotal = PN2*vTotal/310/62.36367/1000;
         
         PaO2alveoli = PaO2alveoli + PaO2diff;
         PaCO2alveoli = PaCO2alveoli + PaCO2diff;
         PN2 = PN2 + PN2diff;
         PH2O = PH2O + PH2Odiff;
         
-        vTotal = nTotal*62.36367*1000*310/PaO2alveoli;
+        vTotal = nTotal*62.36367*1000*310/PN2;
         
         Ptotal = PaO2alveoli + PaCO2alveoli + PH2O + PN2;
         PTotalOverTime(trange) = Ptotal;
@@ -455,13 +439,13 @@ for x=1:xMax %modeling 1 breath
         PaCO2alveoliOverTime(trange)= PaCO2alveoli;
         PN2alveoliOverTime(trange) = PN2;
         PH2OalveoliOverTime(trange) = PH2O;
-        mO2overTime(trange) = mO2out;
-        mCO2overTime(trange) = mCO2out;
+        mO2overTime(trange) = mO2;
+        mCO2overTime(trange) = mCO2;
         t=t+tstep;
         trange = trange+1;
     end 
     
-    while t<texp + timeToAlveoli*2 + tin
+    while t<tinspire + timeToAlveoli + texp
         if PaO2alveoli < PaO2capillary
         difRateO2 = DifCapO2 * (PaO2capillary - PaO2alveoli) *dO2/1000*tstep/60;
         end
@@ -476,19 +460,10 @@ for x=1:xMax %modeling 1 breath
         end
         mO2 = difRateO2;
         mCO2 = difRateCO2;
-        %{
-        mO2alveoli = mO2alveoli + mO2;
-        mCO2alveoli = mCO2alveoli - mCO2;
-        
-        nO2 = mO2alveoli/31.9988;
-        nCO2 = mCO2alveoli/44.0095;
-        
-        PaO2alveoli = nO2*tstep*62.36367*1000*310/3;
-        PaCO2alveoli = nCO2*tstep*62.36367*1000*310/3;
-        %}
         nO2 = mO2/31.9988;
         nCO2 = mCO2/44.0095;
         %PV=nRT, P = nRT/V
+        DifferenceO2OverTime(trange) = (PaO2capillary - PaO2alveoli);
         
         PaO2diff = nO2*62.36367*1000*310/vTotal; %gives pressure in mmHg
         PaCO2diff = nCO2*62.36367*1000*310/vTotal;
@@ -507,14 +482,14 @@ for x=1:xMax %modeling 1 breath
         PN2alveoliOverTime(trange) = PN2;
         PH2OalveoliOverTime(trange) = PH2O;
         
-        mO2overTime(trange) = 0;
-        mCO2overTime(trange) = 0;
+        mO2overTime(trange) = mO2;
+        mCO2overTime(trange) = mCO2;
         
         t=t+tstep;
         trange = trange+1;
     end 
     
-    while t<(tin*2+texp+timeToAlveoli*2)
+    while t<tinspire*2 + texp
         
         mO2in = -0.7*(pi*RFin*TV/60)*sin(pi*RFin*t/30)*0.218*dO2*tstep; %insert partial pressures/total pressure or mass frac for humidified air here
         mCO2in = -0.7*(pi*RFin*TV/60)*sin(pi*RFin*t/30)*0.0003*dCO2*tstep;
@@ -534,7 +509,7 @@ for x=1:xMax %modeling 1 breath
         mN2in = mN2in*-1;
         end
         
-        
+        DifferenceO2OverTime(trange) = (PaO2capillary - PaO2alveoli);
         if PaO2alveoli < PaO2capillary
         difRateO2 = DifCapO2 * (PaO2capillary - PaO2alveoli) *dO2/1000*tstep/60;
         end
@@ -549,16 +524,6 @@ for x=1:xMax %modeling 1 breath
         end
         mO2 = difRateO2 + mO2in;
         mCO2 = difRateCO2 + mCO2in;
-        %{
-        mO2alveoli = mO2alveoli + mO2;
-        mCO2alveoli = mCO2alveoli - mCO2;
-        
-        nO2 = mO2alveoli/31.9988;
-        nCO2 = mCO2alveoli/44.0095;
-        
-        PaO2alveoli = nO2*tstep*62.36367*1000*310/3;
-        PaCO2alveoli = nCO2*tstep*62.36367*1000*310/3;
-        %}
         
         nO2 = mO2/31.9988;
         nCO2 = mCO2/44.0095;
@@ -582,8 +547,8 @@ for x=1:xMax %modeling 1 breath
        
         Ptotal = PaO2alveoli + PaCO2alveoli + PH2O + PN2;
         PTotalOverTime(trange) = Ptotal;
-        mO2overTime(trange) = mO2in;
-        mCO2overTime(trange) = mCO2in;
+        mO2overTime(trange) = mO2;
+        mCO2overTime(trange) = mCO2;
         PaO2alveoliOverTime(trange)= PaO2alveoli;
         PaCO2alveoliOverTime(trange)= PaCO2alveoli;
         PN2alveoliOverTime(trange) = PN2;
@@ -617,12 +582,12 @@ title('Partial Pressure of CO2 in Alveoli Over Time')
 xlabel('Time (s)')
 ylabel('Partial Pressure (mmHg)')
 figure
-plot(resp_range, mO2overTime);
+plot(resp_range, mO2overTime/tstep);
 title('Mass Flow Rate of O2 In and Out of Alveoli Over Time')
 xlabel('Time (s)')
 ylabel('Mass Flow Rate (g/s)')
 figure
-plot(resp_range,mCO2overTime);
+plot(resp_range,mCO2overTime/tstep);
 title('Mass Flow Rate of CO2 In and Out of Alveoli Over Time')
 xlabel('Time (s)')
 ylabel('Mass Flow Rate (g/s)')
@@ -646,7 +611,8 @@ plot(resp_range, vPercentOverTime(4,:));
 title('Volume Percentage of N2 in Alveoli Over Time')
 xlabel('Time (s)')
 ylabel('Volume Percentage')
-
+figure
+plot(resp_range, PTotalOverTime)
 end
 
 %calcuate mass flow rateswith regards to time
