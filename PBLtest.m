@@ -111,69 +111,86 @@ index_5b = length(range_5b);
 index_5c = length(range_5c);
 index_2a = length(range_2a);
 index_2b = length(range_2b);
+index_overall = length(overall_range);
 % indices used in following for loops
 
 for i = 1:index_1a
     vflow1_a(i) = -volumetricflow(RFin,TV,range_1a(i));
     % volumetric flow rate for inspiration in stream 1 in L/s
     % airflow into body defined as negative direction
+    intflow1_a(i) = -antiderivative(RFin,TV,range_1a(i));
 end
 for i = 1:index_1b
     vflow1_b(i) = 0;
     % includes zero flow rates over time interval when there is no flow 
     % rate in stream 1
+    intflow1_b(i) = 0;
 end
 % calculates the flow rates of stream 1 over time intervals 1a and 1b
 
 for i = 1:index_4a
     vflow4_a(i) = 0;
+    intflow4_a(i) = 0;
 end
 for i = 1:index_4b
     vflow4_b(i) = -volumetricflow(RFin,TV,range_4b(i)-t_start_4);
+    intflow4_b(i) = -antiderivative(RFin,TV,range_4b(i)-t_start_4);
 end
 for i = 1:index_4c
     vflow4_c(i) = 0;
+    intflow4_c(i) = 0;
 end
 % calculates the flow rates of stream 4 over time intervals 4a,4b,4c
 
 for i = 1:index_6a
     vflow6_a(i) = 0;
+    intflow6_a(i) = 0;
 end
 for i = 1:index_6b
     vflow6_b(i) = - 0.7 * volumetricflow(RFin,TV,range_6b(i)-t_start_6);
+    intflow6_b(i) = - 0.7 * antiderivative(RFin,TV,range_6b(i)-t_start_6);
 end
 for i = 1:index_6c
     vflow6_c(i) = 0;
+    intflow6_c(i) = 0;
 end
 % calculates the flow rates of stream 6 over time intervals 6a,6b,6c
 
 for i = 1:index_7a
     vflow7_a(i) = 0;
+    intflow7_a(i) = 0;
 end
 for i = 1:index_7b
     vflow7_b(i) = 0.7 * volumetricflow(RFex,TV,range_7b(i)-t_start_7);
+    intflow7_b(i) = 0.7 * antiderivative(RFex,TV,range_7b(i)-t_start_7);
 end
 for i = 1:index_7c
     vflow7_c(i) = 0;
+    intflow7_c(i) = 0;
 end
 % calculates the flow rates of stream 7 over time intervals 7a,7b,7c
 
 for i = 1:index_5a
     vflow5_a(i) = 0;
+    intflow5_a(i) = 0;
 end
 for i = 1:index_5b
     vflow5_b(i) = volumetricflow(RFex,TV,range_5b(i)-t_start_5);
+    intflow5_b(i) = antiderivative(RFex,TV,range_5b(i)-t_start_5);
 end
 for i = 1:index_5c
     vflow5_c(i) = 0;
+    intflow5_c(i) = 0;
 end
 % % calculates the flow rates of stream 5 over time intervals 5a,5b,5c
 
 for i = 1:index_2a
     vflow2_a(i) = 0;
+    intflow2_a(i) = 0;
 end
 for i = 1:index_2b
     vflow2_b(i) = volumetricflow(RFex,TV,range_2b(i)-t_start_2);
+    intflow2_b(i) = antiderivative(RFex,TV,range_2b(i)-t_start_2);
 end
 % calculates the flow rates of stream 2 over time intervals 2a,2b,2c
 
@@ -183,7 +200,26 @@ vflow6 = [vflow6_a vflow6_b vflow6_c];
 vflow7 = [vflow7_a vflow7_b vflow7_c];
 vflow5 = [vflow5_a vflow5_b vflow5_c];
 vflow2 = [vflow2_a vflow2_b];
-% combines functions for entire respiratory cycle
+% combines the sections of the volumetric flow rate function for the entire 
+% respiratory cycle
+
+
+intflow1 = [intflow1_a intflow1_b];
+intflow4 = [intflow4_a intflow4_b intflow4_c];
+intflow6 = [intflow6_a intflow6_b intflow6_c];
+intflow7 = [intflow7_a intflow7_b intflow7_c];
+intflow5 = [intflow5_a intflow5_b intflow5_c];
+intflow2 = [intflow2_a intflow2_b];
+% combines the sections of the integrals of the volumetric flow rate 
+% function for the entire respiratory cycle
+volcont1 = zeros(1,index_overall);
+volcont_temp1(1) = 0;
+for i = 2:index_overall
+    volcont1(i) = volcont_temp1(i-1) + intflow1(i) - intflow1(i-1);
+    volcont_temp1(i) = volcont1(i);
+end
+plot(overall_range,volcont1)
+title('intflow1')
 
 plot(overall_range,vflow1,overall_range,vflow4,overall_range,vflow6,...
     overall_range,vflow7,overall_range,vflow5,overall_range,vflow2)
@@ -192,8 +228,10 @@ title('Volumetric Flow Rates of Streams 1, 2, 4, 5, 6, and 7')
 xlabel('Time (s)')
 ylabel('Volumetric Flow Rate (L/s)')
 % legend('1','2','4','5','6','7')
-% RV4 = 0;
-% composition(vfrac4,overall_range,RFin,TV,RV4,t_start_4)
+
+RVentry = 0;
+composition(vfrac1,intflow1,intflow4,intflow5,...
+    intflow2,RVentry,length(overall_range),overall_range)
 
 % w = massfrac(vper,M);
 % % w = the mass fraction of each constituent in each stream
@@ -211,8 +249,8 @@ ylabel('Volumetric Flow Rate (L/s)')
 % Tb = 310; % body temperature
 % Ta = 288; % inspired air temperature
 % Q12 = thermal(mass1,c,Ta,Tb)
-% Q13 = thermal(mass1,c,Tb,Ta)
-% % calculates transfer of thermal energy in streams 12 and 13
+% % calculates transfer of thermal energy in streams 12 transferred from
+% the 
 end
 
 %function partial_pressure_calc finds the partial pressure of inspired air
@@ -867,32 +905,65 @@ end
 %streams where volume composition does not change over time-Stream 1, 4, 6
 %vflow= contains all the flow rates of the diagram
 %vfrac= contains all the volume fractions
-function partial_vol= volume(vflow, vfrac)
+function partial_vol= const_volume(vflow, vfrac)
 partial_vol=zeros(6,length(vflow));
 for i=1:length(vflow)
     partial_vol=vfrac.*vflow;
 end
 end
 
-% RV = residual volume that remains in unit
-% only aplies for stream 4 right now
-function composition(vfrac,overall_range,RF,TV,RV,t_start_4)
-V = zeros(4,length(overall_range));
-V(:,1:t_start_4) = RV .* vfrac';
+% intflowin = integral of volumetric flow rate of stream going in to unit
+% intflowout = integral of volumetric flow rate of stream going out of unit
+% For expiration streams, change vfrac(i) to vfracexp(i,j) <-- which we get
+% from Tony's function
+function composition(vfrac,intflowin_in,intflowout_in,intflowin_exp,...
+    intflowout_exp,RV,index,range)
+V = zeros(length(vfrac),index);
+V(:,1) = RV .* vfrac';
+Vtot = zeros(1,index);
+Vtot(1) = sum(RV .* vfrac');
+V_temp = zeros(1,index);
 for i = 1:length(vfrac)
-    for j = t_start_4:length(overall_range)
-        V(i,j) = V(i,j-1) + antiderivative(RF,TV,j)-antiderivative(RF,TV,j-1);
-        for k = 1:length(overall_range)
-            Vs = V(i,:);
-            Vtot(j) = sum(Vs);
-        end
-        vfrac(i,j) = V(i,j)/Vtot(j);
+    for j = 2:index
+        V(i,j) = V(i,j-1) - (vfrac(i)*intflowin_in(j)-vfrac(i)*...
+            intflowin_in(j-1)) + (vfrac(i)*intflowout_in(j)-vfrac(i)*...
+            intflowout_in(j-1)) + (vfrac(i)*intflowin_exp(j)-vfrac(i)*...
+            intflowin_exp(j-1)) - (vfrac(i)*intflowout_exp(j)-vfrac(i)*...
+            intflowout_exp(j-1));
+%         for k = 1:length(vfrac)
+%             Vtot(j) = V(k,j) + V_temp(j);
+%             V_temp(j) = Vtot(j);
+%         end
     end
 end
-plot(overall_range,vfrac(1,:))
-title('Partial Pressure of Oxygen in Stream 4')
+
+for j = 1:index
+    for i = 1:length(vfrac)
+        Vs = V(:,j);
+        Vtot(j) = sum(Vs);
+    end
+end
+figure
+plot(range,Vtot)
+title('Vtot')
+VO2 = V(1,:);
+VCO2 = V(2,:);
+VN2 = V(3,:);
+VH2O = V(4,:);
+PO2 = VO2 ./ Vtot .* 760;
+PCO2 = VCO2 ./ Vtot .* 760;
+PN2 = VN2 ./ Vtot .* 760;
+PH2O = VH2O ./ Vtot .* 760;
+figure
+plot(range,PO2,range,PCO2,range,PN2,range,PH2O)
+title('Partial Pressure of Constituents in Entry Unit')
 xlabel('Time (s)')
-ylabel('PO2 (mmHg)')
+ylabel('Pressure (mmHg)')
+figure
+plot(range,VO2,range,VCO2,range,VN2,range,VH2O,range,Vtot)
+title('Volume of Constituents in Entry Unit')
+xlabel('Time (s)')
+ylabel(' Volume (L)')
 end
 
 function output = antiderivative(RF,TV,t)
