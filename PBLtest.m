@@ -1,6 +1,6 @@
 
 function PBLtest
-[t_start_6,tin,t_delay_7,texp] = entry
+[t_start_6,tin,t_delay_7,texp] = entry;
 blood(t_start_6,tin,t_delay_7,texp)
 end
 
@@ -67,7 +67,7 @@ index_resp = length(resp_range);
 % (connection of main bronchi to trachea) to the exit of the mouth
 % t_delay_7 = time for air to travel from alveoli to exit of mouth during
 % expiration
-tot_t = t_start_6 + tin + t_delay_7 + texp
+tot_t = t_start_6 + tin + t_delay_7 + texp;
 % tot_t = the total time of one respiration cycle
 t_start_7 = t_start_6 + tin;
 t_start_5 = t_start_6 + tin + t_delay_7 - t_delay_2;
@@ -248,7 +248,7 @@ mass1 = totalmass(TV,vfrac1,M);
 c = 1005;
 Tb = 310; % body temperature
 Ta = 288; % inspired air temperature
-Q12 = thermal(mass1,c,Ta,Tb)
+Q12 = thermal(mass1,c,Ta,Tb);
 % calculates transfer of thermal energy in stream 12 to inspired air
 end
 
@@ -291,10 +291,6 @@ sum_ratio = sum(mratio);
 % sum of mass ratios
 w = mratio ./ sum_ratio;
 % mass fractions calculated from mass ratios and sum
-end
-
-function vs = constituent_volume(V, w)
-vs = V .* w;
 end
 
 % total mass finds the total mass of inspired air
@@ -349,7 +345,7 @@ end
 %}
 %only for steady state
 
-function blood(timeToAlveoli)
+function blood(t_start_6,tin,t_delay_7,texp)
 %only for steady state
 
 %vO2inGE2 = 21; %ml/min/mm Hg
@@ -929,10 +925,6 @@ for i = 1:length(vfrac)
             intflowout_in(j-1)) + (vfrac(i)*intflowin_exp(j)-vfrac(i)*...
             intflowin_exp(j-1)) - (vfrac(i)*intflowout_exp(j)-vfrac(i)*...
             intflowout_exp(j-1));
-%         for k = 1:length(vfrac)
-%             Vtot(j) = V(k,j) + V_temp(j);
-%             V_temp(j) = Vtot(j);
-%         end
     end
 end
 
