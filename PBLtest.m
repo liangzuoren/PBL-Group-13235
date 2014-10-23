@@ -12,8 +12,63 @@
 % alveolar sacs
 
 function PBLtest
-[t_start_6,tin,t_delay_7,texp] = airflow;
-% blood(t_start_6,tin,t_delay_7,texp)
+TV = 0.5; % liters
+H = 1.73; % height in meters of standard man
+W = 68; % weight in kilograms of standard man
+
+[RFin,RFex,tin,texp,t_start_4,t_start_6,tot_t,t_start_7,t_start_5,...
+    t_start_2,t_delay_7] = time(TV,H,W);
+
+[vPercentOverTime] = blood(t_start_6,tin,t_delay_7,texp);
+
+airflow(RFin,RFex,tin,texp,t_start_4,t_start_6,tot_t,t_start_7,t_start_5,...
+    t_start_2,vPercentOverTime,TV)
+end
+
+% time calculates time intervals of significance to the respiratory cycle
+% time also calculates the volume of the entry unit and the dead sapce unit
+% Volume_entry= the volume of the entry unit in mL
+% Volume_deadspace = the volume of the dead space unit in mL
+
+function [RFin,RFex,tin,texp,t_start_4,t_start_6,tot_t,t_start_7,...
+    t_start_5,t_start_2,t_delay_2,t_delay_7] = time(TV,H,W)
+
+[RFin,RFex] = RF(H,W);
+% RF calculates the respiration frequencies for inspiration and expiration 
+% based on height and weight
+tin = 30/RFin;
+% RFin is number of breaths per minute, divide by 2 to get number of
+% inspirations per minute and then multiply by 60s/1min to get time of
+% inspiration
+texp = 30/RFex;
+% RFex is number of breaths per minute, divide by 2 to get number of
+% expirations per minute and then multiply by 60s/1min to get time of
+% expiration
+
+insp_range = 0:0.001:tin;
+exp_range = 0:0.001:texp;
+index_in = length(insp_range);
+index_exp = length(exp_range);
+
+[t_start_4,t_start_6,~,~] = traveltime(RFin,TV,index_in,insp_range);
+[t_delay_2,t_delay_7,Volume_deadspace,Volume_entry] = traveltime...
+    (RFex,TV,index_exp,exp_range);
+% t_start_4 = time for air to reach dead space during inspiration
+% t_start_6 = time for air to reach alveoli during inspiration
+% t_delay_2 = time for air to travel from exit of dead space unit 
+% (connection of main bronchi to trachea) to the exit of the mouth
+% t_delay_7 = time for air to travel from alveoli to exit of mouth during
+% expiration
+tot_t = t_start_6 + tin + t_delay_7 + texp;
+% tot_t = the total time of one respiration cycle
+t_start_7 = t_start_6 + tin;
+t_start_5 = t_start_6 + tin + t_delay_7 - t_delay_2;
+t_start_2 = t_start_6 + tin + t_delay_7;
+% finds the times at which air flow begins in streams 2, 5, and 7
+
+Volume_deadspace = Volume_deadspace
+Volume_entry = Volume_entry
+
 end
 
 % The airflow function calculates: 
@@ -27,12 +82,16 @@ end
 % units over one full respiratory cycle 
 % Returns graphs for each of these calulations
 
-function [t_start_6,tin,t_delay_7,texp] = airflow
+function airflow(RFin,RFex,tin,texp,t_start_4,t_start_6,tot_t,t_start_7,t_start_5,...
+    t_start_2,vPercentOverTime,TV)
+
+vfrac_ex_O2 = vPercentOverTime(1,:) ./ 100;
+vfrac_ex_CO2 = vPercentOverTime(2,:) ./ 100;
+vfrac_ex_H2O = vPercentOverTime(3,:) ./ 100;
+vfrac_ex_N2 = vPercentOverTime(4,:) ./ 100;
+
 M = [31.9988 44.0095 28.01348 33.00674];
 % M = molar mass of each constituent
-TV = 0.5; % liters
-H = 1.73; % height in meters of standard man
-W = 68; % weight in kilograms of standard man
 vper1=[20.95 0.033 78.08 0.937];
 %volume percentages of inspired air for O2, CO2, N2, H2O
 PP2 = [116.0 32.0 565.0 47.0];
@@ -55,46 +114,6 @@ vfrac6 = vfrac4;
 % the compositions of stream 6 and 4 are equal because stream 4 is
 % the only inlet stream and stream 6 is the only outlet stream of the dead 
 % space unit, and there are no reactions
-
-[RFin,RFex] = RF(H,W);
-% RF calculates the respiration frequencies for inspiration and expiration 
-% based on height and weight
-tin = 30/RFin;
-% RFin is number of breaths per minute, divide by 2 to get number of
-% inspirations per minute and then multiply by 60s/1min to get time of
-% inspiration
-texp = 30/RFex;
-% RFex is number of breaths per minute, divide by 2 to get number of
-% expirations per minute and then multiply by 60s/1min to get time of
-% expiration
-tresp = tin + texp;
-% sum of inspiration, breathold, and expiration times is the time of one 
-% full respiratory cycle
-
-insp_range = 0:0.001:tin;
-exp_range = 0:0.001:texp;
-resp_range = 0:0.001:tresp;
-index_in = length(insp_range);
-index_exp = length(exp_range);
-index_resp = length(resp_range);
-
-[t_start_4,t_start_6,~,~] = traveltime(RFin,TV,index_in,insp_range);
-[t_delay_2,t_delay_7,Volume_deadspace,Volume_entry] = traveltime...
-    (RFex,TV,index_exp,exp_range);
-Volume_deadspace = Volume_deadspace
-Volume_entry = Volume_entry
-% t_start_4 = time for air to reach dead space during inspiration
-% t_start_6 = time for air to reach alveoli during inspiration
-% t_delay_2 = time for air to travel from exit of dead space unit 
-% (connection of main bronchi to trachea) to the exit of the mouth
-% t_delay_7 = time for air to travel from alveoli to exit of mouth during
-% expiration
-tot_t = t_start_6 + tin + t_delay_7 + texp;
-% tot_t = the total time of one respiration cycle
-t_start_7 = t_start_6 + tin;
-t_start_5 = t_start_6 + tin + t_delay_7 - t_delay_2;
-t_start_2 = t_start_6 + tin + t_delay_7;
-% finds the times at which air flow begins in streams 2, 5, and 7
 
 range_1a = 0:0.001:tin;
 range_1b = tin+0.001:0.001:tot_t;
@@ -307,22 +326,27 @@ title('Volumetric Flow Rate of Constituents in Stream 6')
 xlabel('Time (s)')
 ylabel('Volumetric Flow Rate (L/s)')
 
-% volcont1 = zeros(1,index_overall);
-% volcont_temp1(1) = 0;
+volcont1 = zeros(1,index_overall);
+volcont_temp1(1) = 0;
+volcont2 = zeros(1,index_overall);
+volcont_temp2(1) = 0;
 % volcont4 = zeros(1,index_overall);
 % volcont_temp4(1) = 0;
-% for i = 2:index_overall
-%     volcont1(i) = volcont_temp1(i-1) + intflow1(i) - intflow1(i-1);
-%     volcont_temp1(i) = volcont1(i);
+for i = 2:index_overall
+    volcont1(i) = volcont_temp1(i-1) + intflow1(i) - intflow1(i-1);
+    volcont_temp1(i) = volcont1(i);
 %     volcont4(i) = volcont_temp4(i-1) + intflow4(i) - intflow4(i-1);
 %     volcont_temp4(i) = volcont4(i);
-% end
-% 
-% test = intflow1(length(range_1a));
+    volcont2(i) = volcont_temp2(i-1) + intflow2(i) - intflow2(i-1);
+    volcont_temp2(i) = volcont2(i);
+end
 
-% figure
-% plot(overall_range,intflow1,overall_range,intflow4)
-% title('intflow 1 and 4')
+% v1 = volcont1(index_overall)
+% v2 = volcont2(index_overall)
+% v1 + v2
+figure
+plot(overall_range,volcont1)
+title('intflow 1')
 % figure 
 % plot(overall_range,volcont1,overall_range,volcont4)
 % title('volcont 1 and 4')
@@ -354,8 +378,6 @@ title('Volume Percentages of Constituents in Entry Unit')
 xlabel('Time (s)')
 ylabel(' Volume Percent (%)')
 
-% w = massfrac(vper,M);
-% % w = the mass fraction of each constituent in each stream
 % NEED TO ADD HUMIDIFICATION OCCURING OVER TIME IN ENTRY
 
 RVds = 0;
@@ -495,7 +517,7 @@ end
 %}
 %only for steady state
 
-function blood(t_start_6,tin,t_delay_7,texp)
+function vPercentOverTime = blood(t_start_6,tin,t_delay_7,texp)
 %only for steady state
 
 %vO2inGE2 = 21; %ml/min/mm Hg
@@ -818,6 +840,7 @@ end
 resp_range = 0:0.01:length(nO2alveoliOverTime)*tstep-tstep;
 length(resp_range);
 length(nO2alveoliOverTime)
+length(nTotalOverTime)
 length(PTotalOverTime)
 length(vPercentOverTime)
 vPercentOverTime(1,:)= (nO2alveoliOverTime./nTotalOverTime*100); 
