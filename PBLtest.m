@@ -19,10 +19,10 @@ W = 68; % weight in kilograms of standard man
 [RFin,RFex,tin,texp,t_start_4,t_start_6,tot_t,t_start_7,t_start_5,...
     t_start_2,t_delay_7,index_in,insp_range] = time(TV,H,W);
 
-[vPercentOverTime] = blood(t_start_6,tin,t_delay_7,texp);
+[vPercentOverTime] = blood(t_start_6,tin,t_delay_7,texp,tot_t);
 
 airflow(RFin,RFex,tin,texp,t_start_4,t_start_6,tot_t,t_start_7,t_start_5,...
-    t_start_2,TV,index_in,insp_range)
+    t_start_2,TV,index_in,insp_range,vPercentOverTime)
 end
 
 % time calculates time intervals of significance to the respiratory cycle
@@ -31,7 +31,7 @@ end
 % Volume_deadspace = the volume of the dead space unit in mL
 
 function [RFin,RFex,tin,texp,t_start_4,t_start_6,tot_t,t_start_7,...
-    t_start_5,t_start_2,t_delay_2,t_delay_7,index_in,insp_range] = time(TV,H,W)
+    t_start_5,t_start_2,t_delay_7,index_in,insp_range] = time(TV,H,W)
 
 [RFin,RFex] = RF(H,W);
 % RF calculates the respiration frequencies for inspiration and expiration 
@@ -83,19 +83,19 @@ end
 % Returns graphs for each of these calulations
 
 function airflow(RFin,RFex,tin,texp,t_start_4,t_start_6,tot_t,t_start_7,t_start_5,...
-    t_start_2,TV,index_in,insp_range)
+    t_start_2,TV,index_in,insp_range,vPercentOverTime)
 
-% vfrac_ex_O2 = vPercentOverTime(1,:) ./ 100;
-% vfrac_ex_CO2 = vPercentOverTime(2,:) ./ 100;
-% vfrac_ex_H2O = vPercentOverTime(3,:) ./ 100;
-% vfrac_ex_N2 = vPercentOverTime(4,:) ./ 100;
+vfrac_ex_O2 = vPercentOverTime(1,:) ./ 100;
+vfrac_ex_CO2 = vPercentOverTime(2,:) ./ 100;
+vfrac_ex_H2O = vPercentOverTime(3,:) ./ 100;
+vfrac_ex_N2 = vPercentOverTime(4,:) ./ 100;
 
 M = [31.9988 44.0095 28.01348 33.00674];
 % M = molar mass of each constituent
 M_air = sum(M);
 R = 62.3637;
 Tb = 310; % body temperature
-air_density=1.184;
+air_density=1.184; % g/L
 
 vper1=[20.95 0.033 78.08 0.937];
 %volume percentages of inspired air for O2, CO2, N2, H2O
@@ -281,26 +281,47 @@ for i = 1:length(vfrac6)
 end
 % calculates the volumetric flow rates of constituents in stream 6
 
-% for i = 1:length(vfrac2)
-%     for j = 1:index_overalli
-%         vflows2(i,j) = vfrac2(i,j)' * vflow2(j);
-%     end
-% end
-% % calculates the volumetric flow rates of constituents in stream 2 
-% 
-% for i = 1:length(vfrac5)
-%     for j = 1:index_overall
-%         vflows5(i,j) = vfrac5(i,j)' * vflow5(j);
-%     end
-% end
-% % calculates the volumetric flow rates of constituents in stream 5
-% 
-% for i = 1:length(vfrac7)
-%     for j = 1:index_overall
-%         vflows7(i,j) = vfrac7(i,j)' * vflow7(j);
-%     end
-% end
-% % calculates the volumetric flow rates of constituents in stream 7
+for j = 1:index_overall
+    vflow2O2(j) = vfrac_ex_O2(j) * vflow2(j);
+    vflow2CO2(j) = vfrac_ex_CO2(j) * vflow2(j);
+    vflow2N2(j) = vfrac_ex_N2(j) * vflow2(j);
+    vflow2H2O(j) = vfrac_ex_H2O(j) * vflow2(j);
+end
+
+% calculates the volumetric flow rates of constituents in stream 2 
+
+
+for j = 1:index_overall
+    vflow5O2(j) = vfrac_ex_O2(j) * vflow5(j);
+    vflow5CO2(j) = vfrac_ex_CO2(j) * vflow5(j);
+    vflow5N2(j) = vfrac_ex_N2(j) * vflow5(j);
+    vflow5H2O(j) = vfrac_ex_H2O(j) * vflow5(j);
+end
+
+% calculates the volumetric flow rates of constituents in stream 5
+
+for j = 1:index_overall
+    vflow7O2(j) = vfrac_ex_O2(j) * vflow7(j);
+    vflow7CO2(j) = vfrac_ex_CO2(j) * vflow7(j);
+    vflow7N2(j) = vfrac_ex_N2(j) * vflow7(j);
+    vflow7H2O(j) = vfrac_ex_H2O(j) * vflow7(j);
+end
+% calculates the volumetric flow rates of constituents in stream 7
+figure
+plot(overall_range,vflows1(1,:),overall_range,vflows4(1,:),overall_range,vflows6(1,:),overall_range,vflow2O2,overall_range,vflow5O2,overall_range,vflow7O2)
+title('Volumetric Flow Rates of Oxygen Through Airways')
+
+figure
+plot(overall_range,vflows1(2,:),overall_range,vflows4(2,:),overall_range,vflows6(2,:),overall_range,vflow2CO2,overall_range,vflow5CO2,overall_range,vflow7CO2)
+title('Volumetric Flow Rates of Carbon Dioxide Through Airways')
+
+figure
+plot(overall_range,vflows1(3,:),overall_range,vflows4(3,:),overall_range,vflows6(3,:),overall_range,vflow2N2,overall_range,vflow5N2,overall_range,vflow7N2)
+title('Volumetric Flow Rates of Water Vapor Through Airways')
+
+figure
+plot(overall_range,vflows1(4,:),overall_range,vflows4(4,:),overall_range,vflows6(4,:),overall_range,vflow2H2O,overall_range,vflow5H2O,overall_range,vflow7H2O)
+title('Volumetric Flow Rates of Water Vapor Through Airways')
 
 RVentry = 0;
 [VO2entry,VCO2entry,VN2entry,VH2Oentry,Vtotentry, ...
@@ -322,6 +343,7 @@ nflowO2entry = nflownet_entry(1,:);
 nflowCO2entry = nflownet_entry(2,:);
 nflowN2entry = nflownet_entry(3,:);
 nflowH2Oentry = nflownet_entry(4,:);
+
 PO2entry = zeros(1,length(nflowO2entry));
 PCO2entry = zeros(1,length(nflowCO2entry));
 PN2entry = zeros(1,length(nflowN2entry));
@@ -357,7 +379,6 @@ for i=2:length(nflowO2entry)
    PH2Oentry(i) = PH2Oentry(i-1);
    end
    
-end
 %PO2entry =(nflowO2entry*R*Tbss*0.001)./VO2entry;
 %PCO2entry =(nflowCO2entry*R*Tb*0.001)./VCO2entry;
 %PN2entry =(nflowNs2entry*R*Tb*0.001)./VN2entry;
@@ -580,7 +601,7 @@ end
 %}
 %only for steady state
 
-function vPercentOverTime = blood(t_start_6,tin,t_delay_7,texp)
+function vPercentOverTime = blood(t_start_6,tin,t_delay_7,texp,tot_t)
 %only for steady state
 
 %vO2inGE2 = 21; %ml/min/mm Hg
@@ -593,7 +614,8 @@ H = 1.73; % height in meters of standard man
 W = 68; % weight in kilograms of standard man
 [RFin,RFex] = RF(H,W);
 
-tresp = tin + texp +t_start_6 +t_delay_7
+
+tresp = tot_t
 % calculates length of time per inspiration and expiration from breathing
 % frequencies
 PaO2i = 100;%100 mmHg partial pressure in beginning for O2
@@ -1240,7 +1262,7 @@ t_start_4 = t1 + t2;
 % brochi) is the sum of the time to travel through the extrathoracic region 
 % and the time to travel through the trachea
 
-for i = 2:17
+for i = 2:15
     for j =1:index
         if abs(int_vflow(j)*1000/A(i) - l(i)) < 0.01
             t_dead_gen(j) = range(j);
@@ -1249,14 +1271,14 @@ for i = 2:17
 end
 
 t_dead_sum = sum(t_dead_gen);
-% the first alveoli appear at generation 17
+% the first alveoli appear at generation 15
 % the time to travel from the exit of the trachea to the first alveoli is 
-% the sum of the time to travel though the generation 1 through 16 airways
+% the sum of the time to travel though the generation 1 through 14 airways
 
 t_start_6 = t_start_4 + t_dead_sum;
 % t_start_6 = the total time required for air to reach the first alveoli
 
-for i = 2:17
+for i = 2:15
     Volume(i) = pi * r(i)^2 * l(i) * 2^(i-1);
 end
 Volume_deadspace = sum(Volume);
@@ -1309,7 +1331,7 @@ end
 
 for i = 1:length(vfrac)
     for j = 2:index
-        if Vtot(j) == 0
+        if abs(Vtot(j)) < 0.0001
         vper_s(i,j) = 0;
         % TO-DO: Why isn't this working?
         else
@@ -1333,7 +1355,7 @@ density=1.184;
 ntot = Vtot .* density ./ M_air;
 Ptot = ntot .* R .* Tb ./ Vtot;
 for i = 1:index
-    if Vtot(i) == 0
+    if abs(Vtot(i)) < 0.0001
         PO2(i) = 0;
         PCO2(i) = 0;
         PN2(i) = 0;
