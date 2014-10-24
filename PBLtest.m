@@ -19,7 +19,7 @@ W = 68; % weight in kilograms of standard man
 [RFin,RFex,tin,texp,t_start_4,t_start_6,tot_t,t_start_7,t_start_5,...
     t_start_2,t_delay_7,index_in,insp_range] = time(TV,H,W);
 
-% [vPercentOverTime] = blood(t_start_6,tin,t_delay_7,texp);
+[vPercentOverTime] = blood(t_start_6,tin,t_delay_7,texp);
 
 airflow(RFin,RFex,tin,texp,t_start_4,t_start_6,tot_t,t_start_7,t_start_5,...
     t_start_2,TV,index_in,insp_range)
@@ -322,22 +322,63 @@ nflowO2entry = nflownet_entry(1,:);
 nflowCO2entry = nflownet_entry(2,:);
 nflowN2entry = nflownet_entry(3,:);
 nflowH2Oentry = nflownet_entry(4,:);
-for i = 1:index_overall
-    if VO2entry(i) == 0
-        PO2entry(i) = 0;
-        PCO2entry(i) = 0;
-        PN2entry(i) = 0;
-        PH2Oentry(i) = 0;
-    else
-        PO2entry(i) = nflowO2entry(i) .* R .* Tb * overall_range(i) ./ (vflow1(i)*vfrac1(1)-vflow4(i)*vfrac1(1));
-        PCO2entry(i) = nflowCO2entry(i) .* R .* Tb * overall_range(i) ./ VCO2entry(i);
-        PN2entry(i) = nflowN2entry(i) .* R .* Tb * overall_range(i) ./ VN2entry(i);
-        PH2Oentry(i) = nflowH2Oentry(i) .* R .* Tb * overall_range(i) ./ VH2Oentry(i);
-    end
+PO2entry = zeros(1,length(nflowO2entry));
+PCO2entry = zeros(1,length(nflowCO2entry));
+PN2entry = zeros(1,length(nflowN2entry));
+PH2Oentry = zeros(1,length(nflowH2Oentry));
+
+
+for i=2:length(nflowO2entry)
+   if VO2entry(i) > 0;
+       PO2diff = (nflowO2entry(i)*R*Tb*0.001)/(VO2entry(i)*10);
+       PO2entry(i) = PO2entry(i-1) + PO2diff; 
+   else
+       PO2entry(i) = PO2entry(i-1);
+   end    
+       
+   if VCO2entry(i)>0;
+   PCO2diff = (nflowCO2entry(i)*R*Tb*0.001)/(VCO2entry(i)*10);
+   PCO2entry(i) = PCO2entry(i-1) + PCO2diff;
+   else
+   PCO2entry(i) = PCO2entry(i-1);
+   end
+   
+   if VN2entry(i)>0;
+   PN2diff = (nflowN2entry(i)*R*Tb*0.001)/(VN2entry(i)*10);
+   PN2entry(i) = PN2entry(i-1) + PN2diff;
+   else
+   PN2entry(i) =  PN2entry(i-1);
+   end
+   
+   if VH2Oentry(i)>0;
+   PH2Odiff = (nflowH2Oentry(i)*R*Tb*0.001)/(VH2Oentry(i)*10);
+   PH2Oentry(i) = PH2Oentry(i-1) + PH2Odiff; 
+   else
+   PH2Oentry(i) = PH2Oentry(i-1);
+   end
+   
 end
+%PO2entry =(nflowO2entry*R*Tbss*0.001)./VO2entry;
+%PCO2entry =(nflowCO2entry*R*Tb*0.001)./VCO2entry;
+%PN2entry =(nflowNs2entry*R*Tb*0.001)./VN2entry;
+%PH2Oentry =(nflowH2Oentry*R*Tb*0.001)./VH2Oentry;
+
+
 figure
 plot(overall_range,PO2entry)
 title('Pressure of Oxygen in Entry Unit')
+
+figure
+plot(overall_range,PCO2entry)
+title('Pressure of Carbon Dioxide in Entry Unit')
+
+figure
+plot(overall_range,PN2entry)
+title('Pressure of Nitrogen in Entry Unit')
+
+figure
+plot(overall_range,PH2Oentry)
+title('Pressure of Water in Entry Unit')
 
 figure
 plot(overall_range,vflow1,overall_range,vflow4,overall_range,vflow6,...
@@ -552,7 +593,7 @@ H = 1.73; % height in meters of standard man
 W = 68; % weight in kilograms of standard man
 [RFin,RFex] = RF(H,W);
 
-tresp = tin + texp +t_start_6 +t_delay_7;
+tresp = tin + texp +t_start_6 +t_delay_7
 % calculates length of time per inspiration and expiration from breathing
 % frequencies
 PaO2i = 100;%100 mmHg partial pressure in beginning for O2
@@ -567,14 +608,14 @@ nH2Oi = 47*vTotal/62.36367/1000/310;
 TV = 0.5; %tidal volume = 500 mL O2 perfect at 0.9
 DifCapO2 = 21; %mL/min/mmHg
 DifCapCO2 = 400; %mL/min/mmHg
-xMax = 1;
+xMax = 3;
 dO2 =  density(760, 31.9988, 310); %1 atm, 31.9988 g/mol, 310 K(body temperature)
 dCO2 = density(760, 44.0095, 310); %1 atm, 44.0095 g/mol, 310 K(body temperature)
 dN2 = density(760, 28.014, 310);
 dH2O = density(760, 18.01528 ,310);
 trange = 1;
 tstep = 0.001;
-tsize = length(0:tstep:tresp);
+tsize = length(0:tstep:tresp)
 
 PaO2alveoliOverTime = zeros(1,tsize*xMax);
 PaCO2alveoliOverTime = zeros(1,tsize*xMax);
@@ -1312,23 +1353,18 @@ output = -0.5*TV*cos(pi*RF*t/30);
 end
 
 function nflownet = molrate(vflowA,vflowB,vflowC,vfracA,vfracB,vfracC,air_density,M_air,index_overall)
-nflowA = vflowA .* air_density ./ M_air;
-nflowB = vflowB .* air_density ./ M_air;
-nflowC = vflowC .* air_density ./ M_air;
+nflowA = vflowA*air_density/M_air;
+nflowB = vflowB*air_density/M_air;
+nflowC = vflowC*air_density/M_air;
+%nflowA = vflowA .* air_density ./ M_air;
+%nflowB = vflowB .* air_density ./ M_air;
+%nflowC = vflowC .* air_density ./ M_air;
 for i = 1:length(vfracA)
-    for j = 1:index_overall
-        nflows_A(i,j) = nflowA(j) .* vfracA(i);
-        nflows_B(i,j) = nflowB(j) .* vfracB(i);
-        nflows_C(i,j) = nflowC(j) .* vfracC(i);
-        nflownet(i,j) = nflows_A(i,j) + nflows_B(i,j) + nflows_C(i,j);
-    end
+   nflows_A(i,:) = nflowA * vfracA(i);
+   nflows_B(i,:) = nflowB * vfracB(i);
+   %nflows_C(i,:) = nflowC * vfracC(i);  
 end
+nflownet = nflows_A + nflows_B; %+ nflows_C;
+
 
 end
-
-
-
-
-
-
-
