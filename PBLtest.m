@@ -470,6 +470,7 @@ plot(overall_range,PH2Ods)
 title('Pressure of Water in Dead Space')
 xlabel('Time (s)')
 ylabel('Pressure (mmHg)')
+
 % plots the partial pressures of constituents in the dead space unit over 
 % time
 figure
@@ -570,36 +571,7 @@ R = 62.3637; % if units chosen are mmHg, L, and K
 d = (M * P) / (T * R);
 end
 
-
-%PV=nRT
-%R=62.36 (L*mmHg)(mol*K)
-%{
-% BTP values assumed for function deadspace and function gas_exchange_1
-function values_ds= deadspace(n2,nCO2,nN2,nH2O)
-DSV=0.30*TV;   %30% of the total inhaled air goes to dead space
-VO2=(nO2*62.36*310)/149.3;  %partial volume of O2 during both inhalation and exhalation
-VCO2=(nCO2*62.36*310)/0.3;  %partial volume of CO2 during both inhalation and exhalation
-VN2=(nN2*62.36*310)/563.4;  %partial volume of N2 during both inhalation and exhalation
-VH2O=(nH2O*62.36*310)/47;   %partial volume of H2O during both inhalation and exhalation
-values_ds=[VO2 VCO2 VN2 VH2O];  %partial volumes for deadspace unit
-A: m3-m4=0;  %total mass flow rate equation
-m3w3,CO2-m4w4,CO2=0;  %mass flow rate equation for CO2
-m3w3,O2-m4w4,O2=0; %mass flow rate equation for O2
-m3w3,N2-m4w4,N2=0; %mass flow rate equation for N2
-m3w3,H2O-m4w4,H2O=0; %mass flow rate equation for H2O
-end
-%}
-%only for steady state
-
 function vPercentOverTime = blood(t_start_6,tin,t_delay_7,texp,tot_t)
-%only for steady state
-
-%vO2inGE2 = 21; %ml/min/mm Hg
-%vO2inGE1 = vO2inGE2/0.7*0.3;
-%vCO2outGE2 = 451;
-%vCO2outGE1 = vCO2outGE2/0.7*0.3;
-%vO2outblood = vO2inGE1 + vO2inGE2;
-%vCO2inblood = vCO2outGE1 + vCO2outGE2;
 H = 1.73; % height in meters of standard man
 W = 68; % weight in kilograms of standard man
 [RFin,RFex] = RF(H,W);
@@ -641,7 +613,10 @@ PaO2alveoli = PaO2i;
 PaCO2alveoli = PaCO2i;
 nN2 = nN2i;
 nH2O = nH2Oi;
-PaO2capillary = 60; %Partial pressure are really good at 65
+PaO2capillary = 60; %60 was used as 40 is the value for deoxygenated blood 
+% and 100 was the value for oxygenated blood. Knowing that 1/3
+% of the capillary is actually used for gas exchange, we used the value of
+% 60 to calculate our diffusion
 PaCO2capillary = 46;
 vO2rateoverTime = zeros(1,tsize*xMax);
 vCO2rateoverTime = zeros(1,tsize*xMax);
@@ -661,20 +636,26 @@ nTotalOverTime = zeros(1, tsize*xMax);
 DiffusionRateO2OverTime = zeros(1,tsize*xMax);
 DiffusionRateCO2OverTime = zeros(1, tsize*xMax);
 
-for x=1:xMax %modeling 1 breath
-    %t = t_start_6+tin;
+for x=1:xMax %modeling x breaths
+    
     t = 0;
     mO2inTotal = 0;
     mCO2inTotal = 0;
     
-    
+    %this time interval represents the time of expiration, the model starts
+    %assuming end of inspiration has just occured and expiration is about
+    %to occur
     while t<texp
-        
+        %calculate volume leaving of the alveoli during expiration for each 
+        %gas for each time interval
         vO2out = volumetricflow(RFex, TV, t)*0.7*tstep*PaO2alveoli/Ptotal;
         vCO2out = volumetricflow(RFex, TV, t)*0.7*tstep*PaCO2alveoli/Ptotal;
-        vH2Oout = volumetricflow(RFex, TV, t)*0.7*tstep*0.0344;
-        vN2out = volumetricflow(RFex, TV, t)*0.7*tstep*0.7611;
+        vH2Oout = volumetricflow(RFex, TV, t)*0.7*tstep*0.0344; %H2O and N2
+        vN2out = volumetricflow(RFex, TV, t)*0.7*tstep*0.7611; %should be
+        %constant composition
         
+        %making sure the volume out is modeled as a negative
+        %number (leaving the system)
         if vO2out > 0
         vO2out = vO2out*-1;
         end
@@ -688,12 +669,15 @@ for x=1:xMax %modeling 1 breath
         vN2out = vN2out*-1;
         end
         
-        mO2out = vO2out*dO2;%0.15263;%0.2042;
-        mCO2out = vCO2out*dCO2;%0.0421;%*0.0003;%
-        mH2Oout = vH2Oout*dH2O;%PH2O/Ptotal;%0.0344;%0.0618;%
-        mN2out = vN2out*dN2;%PN2/Ptotal;%0.7611;%0.74342;%
+        %volume * density = mass
+        mO2out = vO2out*dO2;
+        mCO2out = vCO2out*dCO2;
+        mH2Oout = vH2Oout*dH2O;
+        mN2out = vN2out*dN2;
         
-        
+        %calculating mass of each gas that diffuses diffusion rate from the
+        %diffusion capacity and the difference between partial pressures in 
+        %the alveoli and capillary in mass
         if PaO2alveoli < PaO2capillary
         difRateO2 = DifCapO2 * (PaO2capillary - PaO2alveoli) *dO2/1000*tstep/60;
         end
@@ -707,37 +691,41 @@ for x=1:xMax %modeling 1 breath
         difRateCO2 = -DifCapCO2 * (PaCO2alveoli - PaCO2capillary) *dCO2/1000*tstep/60;
         end
         
+        %calculating total change in mass
         mO2 = difRateO2 + mO2out;
         mCO2 = difRateCO2 + mCO2out;
+        
+        %calculating total change in moles
         nO2 = mO2/31.9988;
         nCO2 = mCO2/44.0095;
         nN2diff = mN2out/28.014;
         nH2Odiff = mH2Oout/18.01528;
         
         %PV=nRT, P = nRT/V
+        %calculating the difference in partial pressure caused by the total
+        %change in moles in each gas
         PaO2diff = nO2*62.36367*1000*310/vTotal; %gives pressure in mmHg
         PaCO2diff = nCO2*62.36367*1000*310/vTotal;
         
+        %adding partial pressure differences to the initial values to obtain
+        %the initial partial pressures for next time interval
         PaO2alveoli = PaO2alveoli + PaO2diff;
         PaCO2alveoli = PaCO2alveoli + PaCO2diff;
         
         nN2 = nN2 + nN2diff;
         nH2O = nH2O + nH2Odiff;
-        %PN2diff = nN2*62.36367*1000*310/vTotal;
-        %PH2Odiff = nH2O*62.36367*1000*310/vTotal;
         
+        %calculating total moles
         nO2Total = PaO2alveoli*vTotal/310/62.36367/1000;
         nCO2Total = PaCO2alveoli*vTotal/310/62.36367/1000;
         nGasTotal = nO2Total + nN2 + nH2O + nCO2Total;
-        %PN2 = PN2 + PN2diff;
-        %PH2O = PH2O + PH2Odiff;
         
-        
-        %vTotal = nO2Total*62.36367*1000*310/PaO2alveoli;
-        
+        %calculating pressures to obtain new total pressure
         PH2O = nH2O*62.36367*1000*310/vTotal;
         PN2 = nN2*62.36367*1000*310/vTotal;
         Ptotal = PaO2alveoli + PaCO2alveoli + PH2O + PN2;
+        
+        %record all needed output values in matrices to graph
         DiffusionRateO2OverTime(trange) = difRateO2;
         DiffusionRateCO2OverTime(trange) = difRateCO2;
         PTotalOverTime(trange) = Ptotal;
@@ -766,12 +754,20 @@ for x=1:xMax %modeling 1 breath
         mCO2overTime(trange) = mCO2out;
         mN2overTime(trange) = mN2out;
         mH2OoverTime(trange) = mH2Oout;
+        %advancing 1 time step
         t=t+tstep;
         trange = trange+1;
     end 
     
     t = 0;
+    %this time interval accounts for the time it takes for the gas to
+    %travel back and forth between alveoli and the entry, meaning only
+    %diffusion occurs in this box and no volumetric flow is present to or 
+    %from the deadspace
     while t<t_start_6+t_delay_7
+        %calculating mass of each gas that diffuses diffusion rate from the
+        %diffusion capacity and the difference between partial pressures in 
+        %the alveoli and capillary in mass
         if PaO2alveoli < PaO2capillary
         difRateO2 = DifCapO2 * (PaO2capillary - PaO2alveoli) *dO2/1000*tstep/60;
         end
@@ -784,25 +780,28 @@ for x=1:xMax %modeling 1 breath
         if PaCO2alveoli > PaCO2capillary
         difRateCO2 = -DifCapCO2 * (PaCO2alveoli - PaCO2capillary) *dCO2/1000*tstep/60;
         end
+       
         mO2 = difRateO2;
         mCO2 = difRateCO2;
+       
+        %calculating moles of change
         nO2 = mO2/31.9988;
         nCO2 = mCO2/44.0095;
         %PV=nRT, P = nRT/V
-        
+        %calculating partial pressure differences
         PaO2diff = nO2*62.36367*1000*310/vTotal; %gives pressure in mmHg
         PaCO2diff = nCO2*62.36367*1000*310/vTotal;
-        
+        %calculating total moles
         nO2Total = PaO2alveoli*vTotal/310/62.36367/1000;
         nCO2Total = PaCO2alveoli*vTotal/310/62.36367/1000;
         nGasTotal = nO2Total + nN2 + nH2O + nCO2Total;
-        
-        %vTotal = nO2Total*62.36367*1000*310/PaO2alveoli;
+        %calculating new partial pressures for new time step
         PaO2alveoli = PaO2alveoli + PaO2diff;
         PaCO2alveoli = PaCO2alveoli + PaCO2diff;
         
-        
+        %calculating new total pressure
         Ptotal = PaO2alveoli + PaCO2alveoli + PH2O + PN2;
+        %recording the required output values in matrices
         PTotalOverTime(trange) = Ptotal;
         nTotalOverTime(trange) = nGasTotal;
         DiffusionRateO2OverTime(trange) = difRateO2;
@@ -832,19 +831,25 @@ for x=1:xMax %modeling 1 breath
         mCO2overTime(trange) = 0;
         mN2overTime(trange) = 0;
         mH2OoverTime(trange) = 0;
-        
+        %advancing one time step
         t=t+tstep;
         trange = trange+1;
     end
     
     t=0;
-    
+    %this time period accounts for the time of inspiration, where air is
+    %flowing into the alveoli from the dead space and diffusion is occuring
+    %simultaneously
     while t<tin
+        %calculating volume of each constituent that moves into the alveoli
+        %in each time interval
         vO2in = volumetricflow(RFin, TV, t)*0.7*0.2042*tstep;
         vCO2in = volumetricflow(RFin, TV, t)*0.7*0.0003*tstep;
         vH2Oin = volumetricflow(RFin, TV, t)*0.7*0.0344*tstep;
         vN2in =volumetricflow(RFin, TV, t)*0.7*0.7611*tstep;
         
+        %making sure the volumetric flow rate in is positive as positive is
+        %defined as mass flowing into the system
         if vO2in < 0
         vO2in = vO2in*-1;
         end
@@ -857,18 +862,15 @@ for x=1:xMax %modeling 1 breath
         if vN2in < 0
         vN2in = vN2in*-1;
         end
-        
+        %mass = volume*density to find mass moving into the system
         mO2in = vO2in*dO2;
         mCO2in = vCO2in*dCO2;
         mH2Oin = vH2Oin*dH2O;
         mN2in = vN2in*dN2;
-        %{
-        mO2in = -0.7*(pi*RFin*TV/60)*sin(pi*RFin*t/30)*0.218*dO2*tstep; %insert partial pressures/total pressure or mass frac for humidified air here
-        mCO2in = -0.7*(pi*RFin*TV/60)*sin(pi*RFin*t/30)*0.0003*dCO2*tstep;
-        mH2Oin = -0.7*((pi*RFin*TV/60)*sin(pi*RFin*t/30))*dH2O*0.0697*tstep;
-        mN2in = -0.7*((pi*RFin*TV/60)*sin(pi*RFin*t/30))*dN2*0.78*tstep;
-        %}
         
+        %finds mass that moves into the system through diffusion in one 
+        %time interval using the diffusion capacity and the difference
+        %between partial pressures of the two gases.
         if PaO2alveoli < PaO2capillary
         difRateO2 = DifCapO2 * (PaO2capillary - PaO2alveoli) *dO2/1000*tstep/60;
         end
@@ -883,14 +885,15 @@ for x=1:xMax %modeling 1 breath
         end
         mO2 = difRateO2 + mO2in;
         mCO2 = difRateCO2 + mCO2in;
-        
+        %calculating moles
         nO2 = mO2/31.9988;
         nCO2 = mCO2/44.0095;
         nN2diff = mN2in/28.014;
         nH2Odiff = mH2Oin/18.01528;
         
         %PV=nRT, P = nRT/V
-        
+        %calculating the difference in partial pressure caused by the moles
+        %moving into or out of the system
         PaO2diff = nO2*62.36367*1000*310/vTotal; %gives pressure in mmHg
         PaCO2diff = nCO2*62.36367*1000*310/vTotal;
         
@@ -900,13 +903,16 @@ for x=1:xMax %modeling 1 breath
         nO2Total = PaO2alveoli*vTotal/310/62.36367/1000;
         nCO2Total = PaCO2alveoli*vTotal/310/62.36367/1000;
         nGasTotal = nO2Total + nN2 + nH2O + nCO2Total;
-        
+        %calculates the new initial partial pressure values for the next
+        %time interval
         PaO2alveoli = PaO2alveoli + PaO2diff;
         PaCO2alveoli = PaCO2alveoli + PaCO2diff;
         
         PH2O = nH2O*62.36367*1000*310/vTotal;
         PN2 = nN2*62.36367*1000*310/vTotal;
         Ptotal = PaO2alveoli + PaCO2alveoli + PH2O + PN2;
+        
+        %records all of the required outputs in matrices
         DiffusionRateO2OverTime(trange) = difRateO2;
         DiffusionRateCO2OverTime(trange) = difRateCO2;
         PTotalOverTime(trange) = Ptotal;
@@ -938,12 +944,13 @@ for x=1:xMax %modeling 1 breath
         
         mO2inTotal = mO2inTotal + mO2in;
         mCO2inTotal = mCO2inTotal + mCO2in;
+        %advances one time interval
         t=t+tstep;
         trange = trange+1;
         
     end
 end    
-
+%graphs all the required outputs
 resp_range = 0:tstep:length(nO2alveoliOverTime)*tstep-tstep;
 vPercentOverTime(1,:)= (nO2alveoliOverTime./nTotalOverTime*100); 
 vPercentOverTime(2,:) = (nCO2alveoliOverTime./nTotalOverTime*100);
@@ -1029,12 +1036,6 @@ plot(resp_range, vH2OoverTime);
 title('Volume of H2O in Alveoli Over Time')
 xlabel('Time (s)')
 ylabel('Volume')
-
-%{
-figure
-plot(resp_range, PTotalOverTime);
-title('Total Pressure Over Time')
-%}
 figure
 plot(resp_range, DiffusionRateO2OverTime()/tstep);
 title('Diffusion Rate of O2 Across Respiratory Membrane Over Time (Stream 8)')
@@ -1046,12 +1047,25 @@ title('Diffusion Rate of CO2 Across Respiratory Membrane Over Time (Stream 9)')
 xlabel('Time (s)')
 ylabel('Mass Flow Rate(g/s)')
 figure
-%{
-plot(resp_range, nTotalOverTime)
-title('Total Moles of Gas in Alveoli Over Time')
+plot(resp_range, -DiffusionRateO2OverTime()/tstep);
+title('Rate of O2 Leaving the Capillaries')
 xlabel('Time (s)')
-ylabel('Total Moles')
-%}
+ylabel('Mass Flow Rate(g/s)')
+figure
+plot(resp_range, -DiffusionRateCO2OverTime()/tstep)
+title('Rate of CO2 Entering the Capillaries')
+xlabel('Time (s)')
+ylabel('Mass Flow Rate(g/s)')
+figure
+plot(resp_range, 60)
+title('Average Partial Pressure of O2 in Capillaries')
+xlabel('Time(s)')
+ylabel('Pressure(mmHg)')
+figure
+plot(resp_range, 40)
+title('Average Partial Pressure of CO2 in Capillaries')
+xlabel('Time(s)')
+ylabel('Pressure(mmHg)')
 end
 
 %calcuate mass flow rateswith regards to time
@@ -1373,17 +1387,11 @@ nflowA = vflowA*air_density/M_air;
 nflowB = vflowB*air_density/M_air;
 nflowC = vflowC*air_density/M_air;
 nflownets = nflowA + nflowB + nflowC;
-%nflowA = vflowA .* air_density ./ M_air;
-%nflowB = vflowB .* air_density ./ M_air;
-%nflowC = vflowC .* air_density ./ M_air;
-for i = 1:length(nflowA)
-   nflownet(1,i) = nflownets(i) * vfracC(1,i)/100;
-   nflownet(2,i) = nflownets(i) * vfracC(2,i)/100;
-   nflownet(4,i) = nflownets(i) * vfracC(3,i)/100;
-   nflownet(3,i) = nflownets(i) * vfracC(4,i)/100;
-   
-end
-%nflownet = nflows_A + nflows_B; %+ nflows_C;
-
+    for i = 1:length(nflowA)
+        nflownet(1,i) = nflownets(i) * vfracC(1,i)/100;
+        nflownet(2,i) = nflownets(i) * vfracC(2,i)/100;
+        nflownet(4,i) = nflownets(i) * vfracC(3,i)/100;
+        nflownet(3,i) = nflownets(i) * vfracC(4,i)/100; 
+    end
 
 end
