@@ -11,7 +11,7 @@
 % including the alveoli of respiratory bronchioles, alveolar ducts, and
 % alveolar sacs
 
-function PBLtest2
+function PBLtest
 TV = 0.5; % liters
 H = 1.73; % height in meters of standard man
 W = 68; % weight in kilograms of standard man
@@ -335,8 +335,8 @@ RVentry = 0;
 
 RVds = 0;
 [VO2ds,VCO2ds,VN2ds,VH2Ods,Vtotds,PO2ds,PCO2ds,PN2ds,PH2Ods,vperO2ds,...
-    vperCO2ds,vperN2ds,vperH2Ods] = composition(vPercentOverTime,vfrac4,intflow4,...
-    intflow6,intflow7,intflow5,RVds,length(overall_range),M_air);
+    vperCO2ds,vperN2ds,vperH2Ods] = compositionds(vPercentOverTime,vfrac4,intflow4,...
+    intflow6,intflow7,intflow5,RVds,length(overall_range),M_air,index_7a);
 
 vflowtotal = vflow1-vflow2;
 
@@ -1407,6 +1407,81 @@ VO2 = V(1,:);
 VCO2 = V(2,:);
 VN2 = V(3,:);
 VH2O = V(4,:);
+
+density=1.184; 
+%density of inhaled air (g/L)
+ntot = Vtot .* density ./ M_air;
+Ptot = ntot .* R .* Tb ./ Vtot;
+for i = 1:index
+    if abs(Vtot(i)) < 0.0001
+        PO2(i) = 0;
+        PCO2(i) = 0;
+        PN2(i) = 0;
+        PH2O(i) = 0;
+    else
+        PO2(i) = VO2(i) ./ Vtot(i) .* Ptot(i);
+        PCO2(i) = VCO2(i) ./ Vtot(i) .* Ptot(i);
+        PN2(i) = VN2(i) ./ Vtot(i) .* Ptot(i);
+        PH2O(i) = VH2O(i) ./ Vtot(i) .* Ptot(i);
+    end
+end
+end
+
+function [VO2,VCO2,VN2,VH2O,Vtot,PO2,PCO2,PN2,PH2O,vperO2,vperCO2,...
+    vperN2,vperH2O] = compositionds(vPercentOverTime,vfrac,intflowin_in,intflowout_in,...
+    intflowin_exp,intflowout_exp,RV,index,M_air,index_7a)
+vFractionOverTime(4,:) = vPercentOverTime(3,:) ./ 100;
+vFractionOverTime(3,:) = vPercentOverTime(4,:) ./ 100;
+vFractionOverTime(1,:) = vPercentOverTime(1,:) ./ 100;
+vFractionOverTime(2,:) = vPercentOverTime(2,:) ./ 100;
+Tb = 310;
+R = 62.3637; 
+V1 = zeros(length(vfrac),index);
+V2 = zeros(length(vfrac),index);
+V1(:,1) = RV .* vfrac';
+V2(:,1) = 0;
+Vtot = zeros(1,index);
+Vtot(1) = sum(RV .* vfrac');
+V_temp = zeros(1,index);
+for i = 1:length(vfrac)
+    for j = 2:index
+        V1(i,j) = V1(i,j-1) - (vfrac(i)*intflowin_in(j)-vfrac(i)*...
+            intflowin_in(j-1)) + (vfrac(i)*intflowout_in(j)-vfrac(i)*...
+            intflowout_in(j-1)) + (vFractionOverTime(i,j)*intflowin_exp(j)-vFractionOverTime(i,j)*...
+            intflowin_exp(j-1)) - (vFractionOverTime(i,j)*intflowout_exp(j)-vFractionOverTime(i,j)*...
+            intflowout_exp(j-1));
+        % calculates the volume of each constituent i in the unit over time 
+    end
+end
+
+for i = 1:length(vfrac)
+    for j = 1:index
+        Vs = V1(:,j);
+        Vtot(j) = sum(Vs);
+    end
+end
+% calculates the total volume of each constituent in the unit over time
+
+for i = 1:length(vfrac)
+    for j = 2:index
+        if abs(Vtot(j)) < 0.0000001
+        vper_s(i,j) = 0;
+        % TO-DO: Why isn't this working?
+        else
+            vper_s(i,j) = V1(i,j) ./ Vtot(j) .* 100;
+        end
+    end
+end
+% calculates the volume percent of each constituent in the unit over time
+
+vperO2 = vper_s(1,:);
+vperCO2 = vper_s(2,:);
+vperN2 = vper_s(3,:);
+vperH2O = vper_s(4,:);
+VO2 = V1(1,:);
+VCO2 = V1(2,:);
+VN2 = V1(3,:);
+VH2O = V1(4,:);
 
 density=1.184; 
 %density of inhaled air (g/L)
