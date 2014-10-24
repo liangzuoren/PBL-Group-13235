@@ -335,13 +335,12 @@ RVentry = 0;
 
 RVds = 0;
 [VO2ds,VCO2ds,VN2ds,VH2Ods,Vtotds,PO2ds,PCO2ds,PN2ds,PH2Ods,vperO2ds,...
-    vperCO2ds,vperN2ds,vperH2Ods] = compositionds(vPercentOverTime,vfrac4,intflow4,...
-    intflow6,intflow7,intflow5,RVds,length(overall_range),M_air,index_7a);
+    vperCO2ds,vperN2ds,vperH2Ods] = composition(vPercentOverTime,vfrac4,intflow4,...
+    intflow6,intflow7,intflow5,RVds,length(overall_range),M_air);
 
 vflowtotal = vflow1-vflow2;
 
 nflownet_entry = molrate(vflowtotal,-vflow4,vflow5,vfrac1,vfrac4,vPercentOverTime,air_density,M_air,index_overall);
-% doesn't take water flowing in stream 3 into account
 nflowO2entry = nflownet_entry(1,:);
 nflowCO2entry = nflownet_entry(2,:);
 nflowN2entry = nflownet_entry(3,:);
@@ -466,7 +465,8 @@ ylabel('Volumetric Flow Rate (L/s)')
 % end
 
 
-
+test_range = 0:0.001:4;
+index_test = length(test_range);
 figure
 plot(overall_range,PO2entry)
 title('Partial Pressure of Oxygen in Entry Unit')
@@ -481,13 +481,18 @@ xlabel('Time (s)')
 ylabel(' Volume (L)')
 % plots the volumes of constituents in the entry box over time
 figure
-plot(overall_range,vperO2entry,overall_range,vperCO2entry,overall_range,...
-    vperN2entry,overall_range,vperH2Oentry)
-title('Volume Percentages of Constituents in Entry Unit')
+plot(test_range,vperO2entry(1:index_test),test_range,vperCO2entry(1:index_test),test_range,...
+    vperN2entry(1:index_test),test_range,vperH2Oentry(1:index_test))
+title('Volume Percentages of Constituents in Entry Unit - part')
 xlabel('Time (s)')
 ylabel(' Volume Percent (%)')
 
-% NEED TO ADD HUMIDIFICATION OCCURING OVER TIME IN ENTRY
+figure
+plot(overall_range,vperO2entry,overall_range,vperCO2entry,overall_range,...
+    vperN2entry,overall_range,vperH2Oentry)
+title('Volume Percentages of Constituents in Entry Unit - entire')
+xlabel('Time (s)')
+ylabel(' Volume Percent (%)')
 
 
 
@@ -974,7 +979,7 @@ resp_range = 0:tstep:length(nO2alveoliOverTime)*tstep-tstep;
 vPercentOverTime(1,:)= (nO2alveoliOverTime./nTotalOverTime*100); 
 vPercentOverTime(2,:) = (nCO2alveoliOverTime./nTotalOverTime*100);
 vPercentOverTime(3,:) = (nH2OalveoliOverTime./nTotalOverTime*100);
-vPercentOverTime(4,:) = (nN2alveoliOverTime./nTotalOverTime*100)
+vPercentOverTime(4,:) = (nN2alveoliOverTime./nTotalOverTime*100);
 figure
 plot(resp_range, PaO2alveoliOverTime);
 title('Partial Pressure of O2 in Alveoli Over Time')
@@ -1340,20 +1345,18 @@ for i = 1:length(vfrac)
         % calculates the volume of each constituent i in the unit over time 
     end
 end
-
+Vs = zeros(4,index);
 for i = 1:length(vfrac)
     for j = 1:index
-        Vs = V(:,j);
-        Vtot(j) = sum(Vs);
+        Vs(:,j) = V(:,j);
+        Vtot(j) = sum(Vs(:,j));
     end
 end
 % calculates the total volume of each constituent in the unit over time
-
 for i = 1:length(vfrac)
     for j = 2:index
-        if abs(Vtot(j)) < 0.0001
+        if Vtot(j) < 0.01
         vper_s(i,j) = 0;
-        % TO-DO: Why isn't this working?
         else
             vper_s(i,j) = V(i,j) ./ Vtot(j) .* 100;
         end
@@ -1426,7 +1429,7 @@ end
 
 for i = 1:length(vfrac)
     for j = 2:index
-        if abs(Vtot(j)) < 0.0000001
+        if abs(Vtot(j)) < 0.1
         vper_s(i,j) = 0;
         % TO-DO: Why isn't this working?
         else
