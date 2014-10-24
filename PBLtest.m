@@ -341,6 +341,7 @@ RVds = 0;
 vflowtotal = vflow1-vflow2;
 
 nflownet_entry = molrate(vflowtotal,-vflow4,vflow5,vfrac1,vfrac4,vPercentOverTime,air_density,M_air,index_overall);
+% doesn't take water flowing in stream 3 into account
 nflowO2entry = nflownet_entry(1,:);
 nflowCO2entry = nflownet_entry(2,:);
 nflowN2entry = nflownet_entry(3,:);
@@ -354,67 +355,28 @@ PH2Oentry = zeros(1,length(nflowH2Oentry));
 
 
 for i=2:length(nflowO2entry)
-   if VO2entry(i) > 0.0000000001;
        PO2diff = (nflowO2entry(i)*R*Tb*0.001)/(0.0691);
        PO2entry(i) = PO2entry(i-1) + PO2diff; 
-   else
-       PO2entry(i) = PO2entry(i-1);
-   end    
 end
 
 for i=2:length(nflowCO2entry)
-  
-   if VCO2entry(i)>0.000000000001;
    PCO2diff = (nflowCO2entry(i)*R*Tb*0.001)/(0.0691);
    PCO2entry(i) = PCO2entry(i-1) + PCO2diff;
-   else
-   PCO2entry(i) = PCO2entry(i-1);
-   end
 
 end
 
 for i=2:length(nflowN2entry)
 
-   if VN2entry(i)>0.000000000001;
    PN2diff = (nflowN2entry(i)*R*Tb*0.001)/(0.0691);
    PN2entry(i) = PN2entry(i-1) + PN2diff;
-   else
-   PN2entry(i) =  PN2entry(i-1);
-   end
 
 end
 
 for i=2:length(nflowH2Oentry)
 
-   if VH2Oentry(i)>0.000000000001;
    PH2Odiff = (nflowH2Oentry(i)*R*Tb*0.001)/(0.0691);
    PH2Oentry(i) = PH2Oentry(i-1) + PH2Odiff; 
-   else
-   PH2Oentry(i) = PH2Oentry(i-1);
-   end
 end
-   
-%PO2entry =(nflowO2entry*R*Tbss*0.001)./VO2entry;
-%PCO2entry =(nflowCO2entry*R*Tb*0.001)./VCO2entry;
-%PN2entry =(nflowNs2entry*R*Tb*0.001)./VN2entry;
-%PH2Oentry =(nflowH2Oentry*R*Tb*0.001)./VH2Oentry;
-
-
-figure
-plot(overall_range,PO2entry)
-title('Pressure of Oxygen in Entry Unit')
-
-figure
-plot(overall_range,PCO2entry)
-title('Pressure of Carbon Dioxide in Entry Unit')
-
-figure
-plot(overall_range,PN2entry)
-title('Pressure of Nitrogen in Entry Unit')
-
-figure
-plot(overall_range,PH2Oentry)
-title('Pressure of Water in Entry Unit')
 
 figure
 plot(overall_range,vflow1,overall_range,vflow4,overall_range,vflow6,...
@@ -425,53 +387,6 @@ xlabel('Time (s)')
 ylabel('Volumetric Flow Rate (L/s)')
 % legend('1','2','4','5','6','7')
 
-figure
-plot(overall_range,vflows1(1,:),overall_range,vflows1(2,:),...
-    overall_range,vflows1(3,:),overall_range,vflows1(4,:),overall_range,vflow1)
-title('Volumetric Flow Rate of Constituents in Stream 1')
-xlabel('Time (s)')
-ylabel('Volumetric Flow Rate (L/s)')
-
-figure
-plot(overall_range,vflows4(1,:),overall_range,vflows4(2,:),...
-    overall_range,vflows4(3,:),overall_range,vflows4(4,:),overall_range,vflow4)
-title('Volumetric Flow Rate of Constituents in Stream 4')
-xlabel('Time (s)')
-ylabel('Volumetric Flow Rate (L/s)')
-
-figure
-plot(overall_range,vflows6(1,:),overall_range,vflows6(2,:),...
-    overall_range,vflows6(3,:),overall_range,vflows6(4,:),overall_range,vflow6)
-title('Volumetric Flow Rate of Constituents in Stream 6')
-xlabel('Time (s)')
-ylabel('Volumetric Flow Rate (L/s)')
-
-
-
-
-% volcont1 = zeros(1,index_overall);
-% volcont_temp1(1) = 0;
-% volcont2 = zeros(1,index_overall);
-% volcont_temp2(1) = 0;
-% % volcont4 = zeros(1,index_overall);
-% % volcont_temp4(1) = 0;
-% for i = 2:index_overall
-%     volcont1(i) = volcont_temp1(i-1) + intflow1(i) - intflow1(i-1);
-%     volcont_temp1(i) = volcont1(i);
-% %     volcont4(i) = volcont_temp4(i-1) + intflow4(i) - intflow4(i-1);
-% %     volcont_temp4(i) = volcont4(i);
-%     volcont2(i) = volcont_temp2(i-1) + intflow2(i) - intflow2(i-1);
-%     volcont_temp2(i) = volcont2(i);
-% end
-
-
-test_range = 0:0.001:4;
-index_test = length(test_range);
-figure
-plot(overall_range,PO2entry)
-title('Partial Pressure of Oxygen in Entry Unit')
-xlabel('Time (s)')
-ylabel('Pressure (mmHg)')
 % plots the partial pressures of constituents in the entry box over time
 figure
 plot(overall_range,VO2entry,overall_range,VCO2entry,overall_range,...
@@ -481,25 +396,78 @@ xlabel('Time (s)')
 ylabel(' Volume (L)')
 % plots the volumes of constituents in the entry box over time
 figure
-plot(test_range,vperO2entry(1:index_test),test_range,vperCO2entry(1:index_test),test_range,...
-    vperN2entry(1:index_test),test_range,vperH2Oentry(1:index_test))
-title('Volume Percentages of Constituents in Entry Unit - part')
-xlabel('Time (s)')
-ylabel(' Volume Percent (%)')
-
-figure
 plot(overall_range,vperO2entry,overall_range,vperCO2entry,overall_range,...
     vperN2entry,overall_range,vperH2Oentry)
-title('Volume Percentages of Constituents in Entry Unit - entire')
+title('Volume Percentages of Constituents in Entry Unit')
 xlabel('Time (s)')
 ylabel(' Volume Percent (%)')
+axis([0,6,-200,200])
 
+vflowtotal = -vflow7-vflow6;
+nflownet_ds = molrate(vflowtotal,vflow4,vflow5,vfrac1,vfrac4,vPercentOverTime,air_density,M_air,index_overall);
+
+nflowO2ds = nflownet_ds(1,:);
+nflowCO2ds = nflownet_ds(2,:);
+nflowN2ds = nflownet_ds(3,:);
+nflowH2Ods = nflownet_ds(4,:);
+
+PO2ds = zeros(1,length(nflowO2ds));
+PCO2ds = zeros(1,length(nflowCO2ds));
+PN2ds = zeros(1,length(nflowN2ds));
+PH2Ods = zeros(1,length(nflowH2Ods));
+
+
+
+for i=2:length(nflowO2ds)
+       PO2diff = (nflowO2ds(i)*R*Tb*0.001)/(0.0571);
+       PO2ds(i) = PO2ds(i-1) + PO2diff; 
+end
+
+for i=2:length(nflowCO2ds)
+  
+   
+   PCO2diff = (nflowCO2ds(i)*R*Tb*0.001)/(0.0571);
+   PCO2ds(i) = PCO2ds(i-1) + PCO2diff;
+   
+end
+
+
+for i=2:length(nflowN2ds)
+
+   PN2diff = (nflowN2ds(i)*R*Tb*0.001)/(0.0571);
+   PN2ds(i) = PN2ds(i-1) + PN2diff;
+   
+end
+
+for i=2:length(nflowH2Ods)
+
+   PH2Odiff = (nflowH2Ods(i)*R*Tb*0.001)/(0.0571);
+   PH2Ods(i) = PH2Ods(i-1) + PH2Odiff; 
+   
+end
 
 
 figure
-plot(overall_range,PO2ds,overall_range,PCO2ds,overall_range,...
-    PN2ds,overall_range,PH2Ods)
-title('Partial Pressure of Constituents in Dead Space Unit')
+plot(overall_range,PO2ds)
+title('Pressure of Oxygen in Dead Space')
+xlabel('Time (s)')
+ylabel('Pressure (mmHg)')
+
+figure
+plot(overall_range,PCO2ds)
+title('Pressure of Carbon Dioxide in Dead Space')
+xlabel('Time (s)')
+ylabel('Pressure (mmHg)')
+
+figure
+plot(overall_range,PN2ds)
+title('Pressure of Nitrogen in Dead Space')
+xlabel('Time (s)')
+ylabel('Pressure (mmHg)')
+
+figure
+plot(overall_range,PH2Ods)
+title('Pressure of Water in Dead Space')
 xlabel('Time (s)')
 ylabel('Pressure (mmHg)')
 % plots the partial pressures of constituents in the dead space unit over 
@@ -518,6 +486,7 @@ plot(overall_range,vperO2ds,overall_range,vperCO2ds,overall_range,...
 title('Volume Percentages of Constituents in Dead Space')
 xlabel('Time (s)')
 ylabel(' Volume Percent (%)')
+axis([0,6,-200,200])
 
 mass1 = totalmass(TV,vfrac1,M);
 % mass1 = the total mass of inspired air
@@ -525,7 +494,7 @@ mass1 = totalmass(TV,vfrac1,M);
 c = 1005;
 Tb = 310; % body temperature
 Ta = 288; % inspired air temperature
-Q12 = thermal(mass1,c,Ta,Tb);
+Q12 = thermal(mass1,c,Ta,Tb)
 % calculates transfer of thermal energy in stream 12 to inspired air
 end
 
@@ -1345,18 +1314,20 @@ for i = 1:length(vfrac)
         % calculates the volume of each constituent i in the unit over time 
     end
 end
-Vs = zeros(4,index);
+
 for i = 1:length(vfrac)
     for j = 1:index
-        Vs(:,j) = V(:,j);
-        Vtot(j) = sum(Vs(:,j));
+        Vs = V(:,j);
+        Vtot(j) = sum(Vs);
     end
 end
 % calculates the total volume of each constituent in the unit over time
+
 for i = 1:length(vfrac)
     for j = 2:index
-        if Vtot(j) < 0.01
+        if abs(Vtot(j)) < 0.0001
         vper_s(i,j) = 0;
+        % TO-DO: Why isn't this working?
         else
             vper_s(i,j) = V(i,j) ./ Vtot(j) .* 100;
         end
@@ -1372,81 +1343,6 @@ VO2 = V(1,:);
 VCO2 = V(2,:);
 VN2 = V(3,:);
 VH2O = V(4,:);
-
-density=1.184; 
-%density of inhaled air (g/L)
-ntot = Vtot .* density ./ M_air;
-Ptot = ntot .* R .* Tb ./ Vtot;
-for i = 1:index
-    if abs(Vtot(i)) < 0.0001
-        PO2(i) = 0;
-        PCO2(i) = 0;
-        PN2(i) = 0;
-        PH2O(i) = 0;
-    else
-        PO2(i) = VO2(i) ./ Vtot(i) .* Ptot(i);
-        PCO2(i) = VCO2(i) ./ Vtot(i) .* Ptot(i);
-        PN2(i) = VN2(i) ./ Vtot(i) .* Ptot(i);
-        PH2O(i) = VH2O(i) ./ Vtot(i) .* Ptot(i);
-    end
-end
-end
-
-function [VO2,VCO2,VN2,VH2O,Vtot,PO2,PCO2,PN2,PH2O,vperO2,vperCO2,...
-    vperN2,vperH2O] = compositionds(vPercentOverTime,vfrac,intflowin_in,intflowout_in,...
-    intflowin_exp,intflowout_exp,RV,index,M_air,index_7a)
-vFractionOverTime(4,:) = vPercentOverTime(3,:) ./ 100;
-vFractionOverTime(3,:) = vPercentOverTime(4,:) ./ 100;
-vFractionOverTime(1,:) = vPercentOverTime(1,:) ./ 100;
-vFractionOverTime(2,:) = vPercentOverTime(2,:) ./ 100;
-Tb = 310;
-R = 62.3637; 
-V1 = zeros(length(vfrac),index);
-V2 = zeros(length(vfrac),index);
-V1(:,1) = RV .* vfrac';
-V2(:,1) = 0;
-Vtot = zeros(1,index);
-Vtot(1) = sum(RV .* vfrac');
-V_temp = zeros(1,index);
-for i = 1:length(vfrac)
-    for j = 2:index
-        V1(i,j) = V1(i,j-1) - (vfrac(i)*intflowin_in(j)-vfrac(i)*...
-            intflowin_in(j-1)) + (vfrac(i)*intflowout_in(j)-vfrac(i)*...
-            intflowout_in(j-1)) + (vFractionOverTime(i,j)*intflowin_exp(j)-vFractionOverTime(i,j)*...
-            intflowin_exp(j-1)) - (vFractionOverTime(i,j)*intflowout_exp(j)-vFractionOverTime(i,j)*...
-            intflowout_exp(j-1));
-        % calculates the volume of each constituent i in the unit over time 
-    end
-end
-
-for i = 1:length(vfrac)
-    for j = 1:index
-        Vs = V1(:,j);
-        Vtot(j) = sum(Vs);
-    end
-end
-% calculates the total volume of each constituent in the unit over time
-
-for i = 1:length(vfrac)
-    for j = 2:index
-        if abs(Vtot(j)) < 0.1
-        vper_s(i,j) = 0;
-        % TO-DO: Why isn't this working?
-        else
-            vper_s(i,j) = V1(i,j) ./ Vtot(j) .* 100;
-        end
-    end
-end
-% calculates the volume percent of each constituent in the unit over time
-
-vperO2 = vper_s(1,:);
-vperCO2 = vper_s(2,:);
-vperN2 = vper_s(3,:);
-vperH2O = vper_s(4,:);
-VO2 = V1(1,:);
-VCO2 = V1(2,:);
-VN2 = V1(3,:);
-VH2O = V1(4,:);
 
 density=1.184; 
 %density of inhaled air (g/L)
