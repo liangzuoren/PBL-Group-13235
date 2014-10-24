@@ -307,6 +307,7 @@ for j = 1:index_overall
     vflow7H2O(j) = vfrac_ex_H2O(j) * vflow7(j);
 end
 % calculates the volumetric flow rates of constituents in stream 7
+
 figure
 plot(overall_range,vflows1(1,:),overall_range,vflows4(1,:),overall_range,vflows6(1,:),overall_range,vflow2O2,overall_range,vflow5O2,overall_range,vflow7O2)
 title('Volumetric Flow Rates of Oxygen Through Airways')
