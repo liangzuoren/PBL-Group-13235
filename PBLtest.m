@@ -338,8 +338,9 @@ RVds = 0;
     vperCO2ds,vperN2ds,vperH2Ods] = compositionds(vPercentOverTime,vfrac4,intflow4,...
     intflow6,intflow7,intflow5,RVds,length(overall_range),M_air,index_7a);
 
- 
-nflownet_entry = molrate(vflow1,-vflow4,zeros(length(vflow1)),vfrac1,vfrac4,vfrac3,air_density,M_air,index_overall);
+vflowtotal = vflow1-vflow2;
+
+nflownet_entry = molrate(vflowtotal,-vflow4,vflow5,vfrac1,vfrac4,vPercentOverTime,air_density,M_air,index_overall);
 % doesn't take water flowing in stream 3 into account
 nflowO2entry = nflownet_entry(1,:);
 nflowCO2entry = nflownet_entry(2,:);
@@ -352,30 +353,42 @@ PN2entry = zeros(1,length(nflowN2entry));
 PH2Oentry = zeros(1,length(nflowH2Oentry));
 
 
+
 for i=2:length(nflowO2entry)
-   if VO2entry(i) > 0;
-       PO2diff = (nflowO2entry(i)*R*Tb*0.001)/(VO2entry(i)*10);
+   if VO2entry(i) > 0.0000000001;
+       PO2diff = (nflowO2entry(i)*R*Tb*0.001)/(0.0691);
        PO2entry(i) = PO2entry(i-1) + PO2diff; 
    else
        PO2entry(i) = PO2entry(i-1);
    end    
-       
-   if VCO2entry(i)>0;
-   PCO2diff = (nflowCO2entry(i)*R*Tb*0.001)/(VCO2entry(i)*10);
+end
+
+for i=2:length(nflowCO2entry)
+  
+   if VCO2entry(i)>0.000000000001;
+   PCO2diff = (nflowCO2entry(i)*R*Tb*0.001)/(0.0691);
    PCO2entry(i) = PCO2entry(i-1) + PCO2diff;
    else
    PCO2entry(i) = PCO2entry(i-1);
    end
-   
-   if VN2entry(i)>0;
-   PN2diff = (nflowN2entry(i)*R*Tb*0.001)/(VN2entry(i)*10);
+
+end
+
+for i=2:length(nflowN2entry)
+
+   if VN2entry(i)>0.000000000001;
+   PN2diff = (nflowN2entry(i)*R*Tb*0.001)/(0.0691);
    PN2entry(i) = PN2entry(i-1) + PN2diff;
    else
    PN2entry(i) =  PN2entry(i-1);
    end
-   
-   if VH2Oentry(i)>0;
-   PH2Odiff = (nflowH2Oentry(i)*R*Tb*0.001)/(VH2Oentry(i)*10);
+
+end
+
+for i=2:length(nflowH2Oentry)
+
+   if VH2Oentry(i)>0.000000000001;
+   PH2Odiff = (nflowH2Oentry(i)*R*Tb*0.001)/(0.0691);
    PH2Oentry(i) = PH2Oentry(i-1) + PH2Odiff; 
    else
    PH2Oentry(i) = PH2Oentry(i-1);
@@ -961,7 +974,7 @@ resp_range = 0:tstep:length(nO2alveoliOverTime)*tstep-tstep;
 vPercentOverTime(1,:)= (nO2alveoliOverTime./nTotalOverTime*100); 
 vPercentOverTime(2,:) = (nCO2alveoliOverTime./nTotalOverTime*100);
 vPercentOverTime(3,:) = (nH2OalveoliOverTime./nTotalOverTime*100);
-vPercentOverTime(4,:) = (nN2alveoliOverTime./nTotalOverTime*100);
+vPercentOverTime(4,:) = (nN2alveoliOverTime./nTotalOverTime*100)
 figure
 plot(resp_range, PaO2alveoliOverTime);
 title('Partial Pressure of O2 in Alveoli Over Time')
@@ -1460,15 +1473,18 @@ function nflownet = molrate(vflowA,vflowB,vflowC,vfracA,vfracB,vfracC,air_densit
 nflowA = vflowA*air_density/M_air;
 nflowB = vflowB*air_density/M_air;
 nflowC = vflowC*air_density/M_air;
+nflownets = nflowA + nflowB + nflowC;
 %nflowA = vflowA .* air_density ./ M_air;
 %nflowB = vflowB .* air_density ./ M_air;
 %nflowC = vflowC .* air_density ./ M_air;
-for i = 1:length(vfracA)
-   nflows_A(i,:) = nflowA * vfracA(i);
-   nflows_B(i,:) = nflowB * vfracB(i);
-   %nflows_C(i,:) = nflowC * vfracC(i);  
+for i = 1:length(nflowA)
+   nflownet(1,i) = nflownets(i) * vfracC(1,i)/100;
+   nflownet(2,i) = nflownets(i) * vfracC(2,i)/100;
+   nflownet(4,i) = nflownets(i) * vfracC(3,i)/100;
+   nflownet(3,i) = nflownets(i) * vfracC(4,i)/100;
+   
 end
-nflownet = nflows_A + nflows_B; %+ nflows_C;
+%nflownet = nflows_A + nflows_B; %+ nflows_C;
 
 
 end
