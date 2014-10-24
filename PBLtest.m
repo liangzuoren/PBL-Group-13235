@@ -12,17 +12,17 @@
 % alveolar sacs
 
 function PBLtest
-TV = 0.5; % liters
+TV = 0.5; % tidal volume in liters
 H = 1.73; % height in meters of standard man
 W = 68; % weight in kilograms of standard man
 
 [RFin,RFex,tin,texp,t_start_4,t_start_6,tot_t,t_start_7,t_start_5,...
-    t_start_2,t_delay_7,index_in,insp_range] = time(TV,H,W);
+    t_start_2,t_delay_7] = time(TV,H,W);
 
 [vPercentOverTime] = blood(t_start_6,tin,t_delay_7,texp,tot_t);
 
 airflow(RFin,RFex,tin,texp,t_start_4,t_start_6,tot_t,t_start_7,t_start_5,...
-    t_start_2,TV,index_in,insp_range,vPercentOverTime)
+    t_start_2,TV,vPercentOverTime)
 end
 
 % time calculates time intervals of significance to the respiratory cycle
@@ -31,8 +31,7 @@ end
 % Volume_deadspace = the volume of the dead space unit in mL
 
 function [RFin,RFex,tin,texp,t_start_4,t_start_6,tot_t,t_start_7,...
-    t_start_5,t_start_2,t_delay_7,index_in,insp_range] = time(TV,H,W)
-
+    t_start_5,t_start_2,t_delay_7] = time(TV,H,W)
 [RFin,RFex] = RF(H,W);
 % RF calculates the respiration frequencies for inspiration and expiration 
 % based on height and weight
@@ -67,7 +66,9 @@ t_start_2 = t_start_6 + tin + t_delay_7;
 % finds the times at which air flow begins in streams 2, 5, and 7
 
 Volume_deadspace = Volume_deadspace
+% the volume of the dead space unit
 Volume_entry = Volume_entry
+% the volume of teh entry unit
 
 end
 
@@ -82,21 +83,22 @@ end
 % units over one full respiratory cycle 
 % Returns graphs for each of these calulations
 
-function airflow(RFin,RFex,tin,texp,t_start_4,t_start_6,tot_t,t_start_7,t_start_5,...
-    t_start_2,TV,index_in,insp_range,vPercentOverTime)
+function airflow(RFin,RFex,tin,texp,t_start_4,t_start_6,tot_t,...
+    t_start_7,t_start_5,t_start_2,TV,vPercentOverTime)
 
 
 vfrac_ex_O2 = vPercentOverTime(1,:) ./ 100;
 vfrac_ex_CO2 = vPercentOverTime(2,:) ./ 100;
 vfrac_ex_H2O = vPercentOverTime(3,:) ./ 100;
 vfrac_ex_N2 = vPercentOverTime(4,:) ./ 100;
-
+% the vlume fractions of each composition at each moment in time during
+% expiration
 M = [31.9988 44.0095 28.01348 33.00674];
 % M = molar mass of each constituent
 M_air = sum(M);
 R = 62.3637;
 Tb = 310; % body temperature
-air_density=1.184; % g/L
+air_density=1.184; % denisty of air in g/L
 
 vper1=[20.95 0.033 78.08 0.937];
 %volume percentages of inspired air for O2, CO2, N2, H2O
@@ -120,7 +122,6 @@ vfrac6 = vfrac4;
 % the compositions of stream 6 and 4 are equal because stream 4 is
 % the only inlet stream and stream 6 is the only outlet stream of the dead 
 % space unit, and there are no reactions
-vfrac3 = [0 0 0 1];
 
 range_1a = 0:0.001:tin;
 range_1b = tin+0.001:0.001:tot_t;
@@ -201,7 +202,8 @@ for i = 1:index_6b
 end
 for i = 1:index_6c
     vflow6_c(i) = 0;
-    intflow6_c(i) = - 0.7 * antiderivative(RFin,TV,range_6b(index_6b)-t_start_6);
+    intflow6_c(i) = - 0.7 * antiderivative(RFin,TV,range_6b...
+        (index_6b)-t_start_6);
 end
 % calculates the flow rates of stream 6 over time intervals 6a,6b,6c
 
@@ -215,7 +217,8 @@ for i = 1:index_7b
 end
 for i = 1:index_7c
     vflow7_c(i) = 0;
-    intflow7_c(i) = 0.7 * antiderivative(RFex,TV,range_7b(index_7b)-t_start_7);
+    intflow7_c(i) = 0.7 * antiderivative(RFex,TV,range_7b...
+        (index_7b)-t_start_7);
 end
 % calculates the flow rates of stream 7 over time intervals 7a,7b,7c
 
@@ -310,38 +313,48 @@ end
 % calculates the volumetric flow rates of constituents in stream 7
 
 figure
-plot(overall_range,vflows1(1,:),overall_range,vflows4(1,:),overall_range,vflows6(1,:),overall_range,vflow2O2,overall_range,vflow5O2,overall_range,vflow7O2)
+plot(overall_range,vflows1(1,:),overall_range,vflows4(1,:),...
+    overall_range,vflows6(1,:),overall_range,vflow2O2,overall_range,...
+    vflow5O2,overall_range,vflow7O2)
 title('Volumetric Flow Rates of Oxygen Through Airways')
 
 figure
-plot(overall_range,vflows1(2,:),overall_range,vflows4(2,:),overall_range,vflows6(2,:),overall_range,vflow2CO2,overall_range,vflow5CO2,overall_range,vflow7CO2)
+plot(overall_range,vflows1(2,:),overall_range,vflows4(2,:),...
+    overall_range,vflows6(2,:),overall_range,vflow2CO2,overall_range,...
+    vflow5CO2,overall_range,vflow7CO2)
 title('Volumetric Flow Rates of Carbon Dioxide Through Airways')
 
 figure
-plot(overall_range,vflows1(3,:),overall_range,vflows4(3,:),overall_range,vflows6(3,:),overall_range,vflow2N2,overall_range,vflow5N2,overall_range,vflow7N2)
+plot(overall_range,vflows1(3,:),overall_range,vflows4(3,:),...
+    overall_range,vflows6(3,:),overall_range,vflow2N2,overall_range,...
+    vflow5N2,overall_range,vflow7N2)
 title('Volumetric Flow Rates of Nitrogen Through Airways')
 
 figure
-plot(overall_range,vflows1(4,:),overall_range,vflows4(4,:),overall_range,vflows6(4,:),overall_range,vflow2H2O,overall_range,vflow5H2O,overall_range,vflow7H2O)
+plot(overall_range,vflows1(4,:),overall_range,vflows4(4,:),...
+    overall_range,vflows6(4,:),overall_range,vflow2H2O,overall_range,...
+vflow5H2O,overall_range,vflow7H2O)
 title('Volumetric Flow Rates of Water Vapor Through Airways')
 
 RVentry = 0;
 [VO2entry,VCO2entry,VN2entry,VH2Oentry,Vtotentry, ...
     vperO2entry,vperCO2entry,vperN2entry,...
-    vperH2Oentry] = composition(vPercentOverTime,vfrac1,intflow1,intflow4,intflow5,...
-    intflow2,RVentry,index_overall,M_air);
+    vperH2Oentry] = composition(vPercentOverTime,vfrac1,intflow1,...
+    intflow4,intflow5,intflow2,RVentry,index_overall);
 % calculates the volumes and partial pressures of constituents in the entry
 % box over one full respiratory cycle
 
 RVds = 0;
-[VO2ds,VCO2ds,VN2ds,VH2Ods,Vtotds,PO2ds,PCO2ds,PN2ds,PH2Ods,vperO2ds,...
-    vperCO2ds,vperN2ds,vperH2Ods] = composition(vPercentOverTime,vfrac4,intflow4,...
-    intflow6,intflow7,intflow5,RVds,length(overall_range),M_air);
+[VO2ds,VCO2ds,VN2ds,VH2Ods,Vtotds,vperO2ds,...
+    vperCO2ds,vperN2ds,vperH2Ods] = composition(vPercentOverTime,...
+    vfrac4,intflow4,intflow6,intflow7,intflow5,RVds,length...
+    (overall_range));
 
 vflowtotal = vflow1-vflow2;
 
-nflownet_entry = molrate(vflowtotal,-vflow4,vflow5,vfrac1,vfrac4,vPercentOverTime,air_density,M_air,index_overall);
-% doesn't take water flowing in stream 3 into account
+nflownet_entry = molrate(vflowtotal,-vflow4,vflow5,vfrac1,vfrac4,...
+    vPercentOverTime,air_density,M_air,index_overall);
+
 nflowO2entry = nflownet_entry(1,:);
 nflowCO2entry = nflownet_entry(2,:);
 nflowN2entry = nflownet_entry(3,:);
@@ -404,7 +417,8 @@ ylabel(' Volume Percent (%)')
 axis([0,6,-200,200])
 
 vflowtotal = -vflow7-vflow6;
-nflownet_ds = molrate(vflowtotal,vflow4,vflow5,vfrac1,vfrac4,vPercentOverTime,air_density,M_air,index_overall);
+nflownet_ds = molrate(vflowtotal,vflow4,vflow5,vfrac1,vfrac4,...
+    vPercentOverTime,air_density,M_air,index_overall);
 
 nflowO2ds = nflownet_ds(1,:);
 nflowCO2ds = nflownet_ds(2,:);
@@ -577,7 +591,7 @@ W = 68; % weight in kilograms of standard man
 [RFin,RFex] = RF(H,W);
 
 
-tresp = tot_t
+tresp = tot_t;
 % calculates length of time per inspiration and expiration from breathing
 % frequencies
 PaO2i = 100;%100 mmHg partial pressure in beginning for O2
@@ -593,13 +607,15 @@ TV = 0.5; %tidal volume = 500 mL O2 perfect at 0.9
 DifCapO2 = 21; %mL/min/mmHg
 DifCapCO2 = 400; %mL/min/mmHg
 xMax = 3;
-dO2 =  density(760, 31.9988, 310); %1 atm, 31.9988 g/mol, 310 K(body temperature)
-dCO2 = density(760, 44.0095, 310); %1 atm, 44.0095 g/mol, 310 K(body temperature)
+dO2 =  density(760, 31.9988, 310); %1 atm, 31.9988 g/mol, 310 K(body
+% temperature)
+dCO2 = density(760, 44.0095, 310); %1 atm, 44.0095 g/mol, 310 K(body 
+% temperature)
 dN2 = density(760, 28.014, 310);
 dH2O = density(760, 18.01528 ,310);
 trange = 1;
 tstep = 0.001;
-tsize = length(0:tstep:tresp)
+tsize = length(0:tstep:tresp);
 
 PaO2alveoliOverTime = zeros(1,tsize*xMax);
 PaCO2alveoliOverTime = zeros(1,tsize*xMax);
@@ -679,16 +695,20 @@ for x=1:xMax %modeling x breaths
         %diffusion capacity and the difference between partial pressures in 
         %the alveoli and capillary in mass
         if PaO2alveoli < PaO2capillary
-        difRateO2 = DifCapO2 * (PaO2capillary - PaO2alveoli) *dO2/1000*tstep/60;
+        difRateO2 = DifCapO2 * (PaO2capillary - PaO2alveoli) *...
+            dO2/1000*tstep/60;
         end
         if PaO2alveoli > PaO2capillary
-        difRateO2 = -DifCapO2 * (PaO2alveoli - PaO2capillary) *dO2/1000*tstep/60;
+        difRateO2 = -DifCapO2 * (PaO2alveoli - PaO2capillary) *...
+            dO2/1000*tstep/60;
         end
         if PaCO2alveoli < PaCO2capillary
-        difRateCO2 = DifCapCO2 * (PaCO2capillary - PaCO2alveoli) *dCO2/1000*tstep/60;
+        difRateCO2 = DifCapCO2 * (PaCO2capillary - PaCO2alveoli) *...
+            dCO2/1000*tstep/60;
         end
         if PaCO2alveoli > PaCO2capillary
-        difRateCO2 = -DifCapCO2 * (PaCO2alveoli - PaCO2capillary) *dCO2/1000*tstep/60;
+        difRateCO2 = -DifCapCO2 * (PaCO2alveoli - PaCO2capillary) *...
+            dCO2/1000*tstep/60;
         end
         
         %calculating total change in mass
@@ -769,16 +789,20 @@ for x=1:xMax %modeling x breaths
         %diffusion capacity and the difference between partial pressures in 
         %the alveoli and capillary in mass
         if PaO2alveoli < PaO2capillary
-        difRateO2 = DifCapO2 * (PaO2capillary - PaO2alveoli) *dO2/1000*tstep/60;
+        difRateO2 = DifCapO2 * (PaO2capillary - PaO2alveoli) *...
+            dO2/1000*tstep/60;
         end
         if PaO2alveoli > PaO2capillary
-        difRateO2 = -DifCapO2 * (PaO2alveoli - PaO2capillary) *dO2/1000*tstep/60;
+        difRateO2 = -DifCapO2 * (PaO2alveoli - PaO2capillary) *...
+            dO2/1000*tstep/60;
         end
         if PaCO2alveoli < PaCO2capillary
-        difRateCO2 = DifCapCO2 * (PaCO2capillary - PaCO2alveoli) *dCO2/1000*tstep/60;
+        difRateCO2 = DifCapCO2 * (PaCO2capillary - PaCO2alveoli) *...
+            dCO2/1000*tstep/60;
         end
         if PaCO2alveoli > PaCO2capillary
-        difRateCO2 = -DifCapCO2 * (PaCO2alveoli - PaCO2capillary) *dCO2/1000*tstep/60;
+        difRateCO2 = -DifCapCO2 * (PaCO2alveoli - PaCO2capillary) *...
+            dCO2/1000*tstep/60;
         end
        
         mO2 = difRateO2;
@@ -872,16 +896,20 @@ for x=1:xMax %modeling x breaths
         %time interval using the diffusion capacity and the difference
         %between partial pressures of the two gases.
         if PaO2alveoli < PaO2capillary
-        difRateO2 = DifCapO2 * (PaO2capillary - PaO2alveoli) *dO2/1000*tstep/60;
+        difRateO2 = DifCapO2 * (PaO2capillary - PaO2alveoli) *...
+            dO2/1000*tstep/60;
         end
         if PaO2alveoli > PaO2capillary
-        difRateO2 = -DifCapO2 * (PaO2alveoli - PaO2capillary) *dO2/1000*tstep/60;
+        difRateO2 = -DifCapO2 * (PaO2alveoli - PaO2capillary) *...
+            dO2/1000*tstep/60;
         end
         if PaCO2alveoli < PaCO2capillary
-        difRateCO2 = DifCapCO2 * (PaCO2capillary - PaCO2alveoli) *dCO2/1000*tstep/60;
+        difRateCO2 = DifCapCO2 * (PaCO2capillary - PaCO2alveoli) *...
+            dCO2/1000*tstep/60;
         end
         if PaCO2alveoli > PaCO2capillary
-        difRateCO2 = -DifCapCO2 * (PaCO2alveoli - PaCO2capillary) *dCO2/1000*tstep/60;
+        difRateCO2 = -DifCapCO2 * (PaCO2alveoli - PaCO2capillary) *...
+            dCO2/1000*tstep/60;
         end
         mO2 = difRateO2 + mO2in;
         mCO2 = difRateCO2 + mCO2in;
@@ -1068,16 +1096,6 @@ xlabel('Time(s)')
 ylabel('Pressure(mmHg)')
 end
 
-%calcuate mass flow rateswith regards to time
-%model diffusion over time
-%partial pressure change over time
-%
-%
-%humid calculates volume percentage in humidfied air
-
-%humidity function calculates the volume percentages of the air constiuents
-
-
 %humid function calculates the volume percentages of the air constiuents
 %after is has been humidified from 50% (when inspired) to 100%
 
@@ -1099,7 +1117,8 @@ m_i=.0045;
 %at 24 degrees Celsius, amount of water in air before humidified (g), at
 %50% humidity, for inspired air
 m_f=.022;
-%at 37 degrees Celsius, amount of water in air after humidified (g), at 100% humidity
+%at 37 degrees Celsius, amount of water in air after humidified (g), at 
+% 100% humidity
 water_added=m_f-m_i;
 density=1.184; 
 %density of inhaled air (g/L)
@@ -1126,6 +1145,7 @@ end
 %M= molar masses of all constituents (g/mol)
 %v_fracf=volumetric fractions of all gas constituents after humidified
 %vper_f= volume percentages of all gas constituents after humidified
+
 function vper_f=volumepercentage(mass_f,M)
 nratio=(mass_f)./M;  
 %calculates number of moles of all gas constituents after humidified
@@ -1157,67 +1177,6 @@ function vflow = volumetricflow(RF,TV,t)
 vflow = (pi*RF*TV)/60 * sin(pi*RF*t/30);
 end
 
-% calculates the pressure in the alveoli with respect to time
-% Raw = airway resistance
-% Pb = baromatic pressure
-% vflow = the volumetric flow rate of air (either inspiratory or expiratory
-% flow rate, depending on the time)
-
-function Pav = alveolarpressure(vflow1)
-Raw = 1.41 / 1.36; % 1.36 is conversion factor to convert cmH2O to mmHg
-Pb = 760; % mmHg
-Pav = vflow1 * Raw + Pb;
-end
- 
-%calculates the volume compositions of each constituent in the gas in each
-%unit
-function partial_vol= volume(PP1)
-pp=zeros(4,8);
-%creates variable to hold the partial pressures for all gas constituents in
-%each unit during respiration
-pp(1,:)=[PP1];%partial pressures for entry box during inspiration (mmHg)
-pp(2,:)=[ppf_O2 ppf_CO2 ppf_N2 ppf_H2O];
-%partial pressures for entry box during expiration (mmHg)
-pp(3,:)=[ppi_O2 ppi_CO2 ppi_N2 ppi_H2O];
-%partial pressures for dead space box during inspiration (mmHg)
-pp(4,:)=[ppf_O2 ppf_CO2 ppf_N2 ppf_H2O];
-%partial pressures for dead space box during expiration (mmHg)
-pp(5,:)=[ppi_O2 ppi_CO2 ppi_N2 ppi_H2O];
-%partial pressures for gas exchange box during inspiration (mmHg)
-pp(6,:)=[ppf_O2 ppf_CO2 ppf_N2 ppf_H2O];
-%partial pressures for gas exchange box during expiration (mmHg)
-pp(7,:)=[ppi_O2 ppi_CO2 ppi_N2 ppi_H2O];
-%partial pressures for cappilaries box during inspiration (mmHg)
-pp(8,:)=[ppf_O2 ppf_CO2 ppf_N2 ppf_H2O];
-%partial pressures for cappilaries box during expiration (mmHg)
-vol=[29.6 29.6 150 150 65 65 3000 3000];
-%total volume of each unit (mL)
-sum_pressures=zeros(8,1);
-pp_frac=zeros(8,4);
-%finds the partial pressure fractions
-for i=1:8
-    sum_pressures(i)=sum(pp(i,:));
-end
-for i=1:8
-    for j=1:4
-        pp_frac(i,j)=pp(i,j)/sum_pressures(i);
-    end
-end
-partial_vol=volume_calcs(vol,pp_frac);
-
-end
-
-%performs the actual calculations to find partial volume of each gas
-%constituent in each unit
-function partial_vol= volume_calcs(vol,pp_frac)
-for i=1:8
-        for j=1:4
-             partial_vol(i,j)=pp_frac(i,j)*vol(i);
-        end
-    
-end
-end
-
 % traveltime calculates the time of air to travel to different locations
 % in the lungs
 % t1 = the time to travel through the extrathoracic region
@@ -1227,7 +1186,8 @@ end
 % flow begins in stream 4
 % t_start_6 = the time required for air to first reach the alveoli
 % (generation 17) 
-function [t_start_4,t_start_6,Volume_deadspace,Volume_entry] = traveltime(RF,TV,index,range)
+function [t_start_4,t_start_6,Volume_deadspace,Volume_entry] = ...
+    traveltime(RF,TV,index,range)
 d = [1.539 1.043 0.71 0.479 0.385 0.299 0.239 0.197 0.159 0.132 0.111 ...
     0.093 0.081 0.07 0.063 0.056 0.051 0.046 0.043 0.04 0.038 0.037 ...
     0.035 0.035];
@@ -1300,13 +1260,13 @@ for i=1:length(vflow)
 end
 end
 
+% calculates the volume of a constituent in a unit at a certain time
+
 % intflowin = integral of volumetric flow rate of stream going in to unit
 % intflowout = integral of volumetric flow rate of stream going out of unit
-% **TO-DO**: For expiration streams, change vfrac(i) to vfracexp(i,j) <-- which we get
-% from Tony's function
-function [VO2,VCO2,VN2,VH2O,Vtot,PO2,PCO2,PN2,PH2O,vperO2,vperCO2,...
-    vperN2,vperH2O] = composition(vPercentOverTime,vfrac,intflowin_in,intflowout_in,...
-    intflowin_exp,intflowout_exp,RV,index,M_air)
+function [VO2,VCO2,VN2,VH2O,Vtot,vperO2,vperCO2,...
+    vperN2,vperH2O] = composition(vPercentOverTime,vfrac,intflowin_in,...
+    intflowout_in,intflowin_exp,intflowout_exp,RV,index)
 vFractionOverTime(4,:) = vPercentOverTime(3,:) ./ 100;
 vFractionOverTime(3,:) = vPercentOverTime(4,:) ./ 100;
 vFractionOverTime(1,:) = vPercentOverTime(1,:) ./ 100;
@@ -1357,24 +1317,6 @@ VO2 = V(1,:);
 VCO2 = V(2,:);
 VN2 = V(3,:);
 VH2O = V(4,:);
-
-density=1.184; 
-%density of inhaled air (g/L)
-ntot = Vtot .* density ./ M_air;
-Ptot = ntot .* R .* Tb ./ Vtot;
-for i = 1:index
-    if abs(Vtot(i)) < 0.0001
-        PO2(i) = 0;
-        PCO2(i) = 0;
-        PN2(i) = 0;
-        PH2O(i) = 0;
-    else
-        PO2(i) = VO2(i) ./ Vtot(i) .* Ptot(i);
-        PCO2(i) = VCO2(i) ./ Vtot(i) .* Ptot(i);
-        PN2(i) = VN2(i) ./ Vtot(i) .* Ptot(i);
-        PH2O(i) = VH2O(i) ./ Vtot(i) .* Ptot(i);
-    end
-end
 end
 
 % calculates the antiderivative of the volumetric flow rate equation
@@ -1382,7 +1324,8 @@ function output = antiderivative(RF,TV,t)
 output = -0.5*TV*cos(pi*RF*t/30);
 end
 
-function nflownet = molrate(vflowA,vflowB,vflowC,vfracA,vfracB,vfracC,air_density,M_air,index_overall)
+function nflownet = molrate(vflowA,vflowB,vflowC,vfracA,vfracB,...
+    vfracC,air_density,M_air,index_overall)
 nflowA = vflowA*air_density/M_air;
 nflowB = vflowB*air_density/M_air;
 nflowC = vflowC*air_density/M_air;
