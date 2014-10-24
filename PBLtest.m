@@ -11,7 +11,7 @@
 % including the alveoli of respiratory bronchioles, alveolar ducts, and
 % alveolar sacs
 
-function PBLtest
+function PBLtest2
 TV = 0.5; % liters
 H = 1.73; % height in meters of standard man
 W = 68; % weight in kilograms of standard man
@@ -84,6 +84,7 @@ end
 
 function airflow(RFin,RFex,tin,texp,t_start_4,t_start_6,tot_t,t_start_7,t_start_5,...
     t_start_2,TV,index_in,insp_range,vPercentOverTime)
+
 
 vfrac_ex_O2 = vPercentOverTime(1,:) ./ 100;
 vfrac_ex_CO2 = vPercentOverTime(2,:) ./ 100;
@@ -318,7 +319,7 @@ title('Volumetric Flow Rates of Carbon Dioxide Through Airways')
 
 figure
 plot(overall_range,vflows1(3,:),overall_range,vflows4(3,:),overall_range,vflows6(3,:),overall_range,vflow2N2,overall_range,vflow5N2,overall_range,vflow7N2)
-title('Volumetric Flow Rates of Water Vapor Through Airways')
+title('Volumetric Flow Rates of Nitrogen Through Airways')
 
 figure
 plot(overall_range,vflows1(4,:),overall_range,vflows4(4,:),overall_range,vflows6(4,:),overall_range,vflow2H2O,overall_range,vflow5H2O,overall_range,vflow7H2O)
@@ -327,14 +328,14 @@ title('Volumetric Flow Rates of Water Vapor Through Airways')
 RVentry = 0;
 [VO2entry,VCO2entry,VN2entry,VH2Oentry,Vtotentry, ...
     vperO2entry,vperCO2entry,vperN2entry,...
-    vperH2Oentry] = composition(vfrac1,intflow1,intflow4,intflow5,...
+    vperH2Oentry] = composition(vPercentOverTime,vfrac1,intflow1,intflow4,intflow5,...
     intflow2,RVentry,index_overall,M_air);
 % calculates the volumes and partial pressures of constituents in the entry
 % box over one full respiratory cycle
 
 RVds = 0;
 [VO2ds,VCO2ds,VN2ds,VH2Ods,Vtotds,PO2ds,PCO2ds,PN2ds,PH2Ods,vperO2ds,...
-    vperCO2ds,vperN2ds,vperH2Ods] = composition(vfrac4,intflow4,...
+    vperCO2ds,vperN2ds,vperH2Ods] = composition(vPercentOverTime,vfrac4,intflow4,...
     intflow6,intflow7,intflow5,RVds,length(overall_range),M_air);
 
  
@@ -379,6 +380,7 @@ for i=2:length(nflowO2entry)
    else
    PH2Oentry(i) = PH2Oentry(i-1);
    end
+end
    
 %PO2entry =(nflowO2entry*R*Tbss*0.001)./VO2entry;
 %PCO2entry =(nflowCO2entry*R*Tb*0.001)./VCO2entry;
@@ -1302,8 +1304,12 @@ end
 % **TO-DO**: For expiration streams, change vfrac(i) to vfracexp(i,j) <-- which we get
 % from Tony's function
 function [VO2,VCO2,VN2,VH2O,Vtot,PO2,PCO2,PN2,PH2O,vperO2,vperCO2,...
-    vperN2,vperH2O] = composition(vfrac,intflowin_in,intflowout_in,...
+    vperN2,vperH2O] = composition(vPercentOverTime,vfrac,intflowin_in,intflowout_in,...
     intflowin_exp,intflowout_exp,RV,index,M_air)
+vFractionOverTime(4,:) = vPercentOverTime(3,:) ./ 100;
+vFractionOverTime(3,:) = vPercentOverTime(4,:) ./ 100;
+vFractionOverTime(1,:) = vPercentOverTime(1,:) ./ 100;
+vFractionOverTime(2,:) = vPercentOverTime(2,:) ./ 100;
 Tb = 310;
 R = 62.3637; 
 V = zeros(length(vfrac),index);
@@ -1315,8 +1321,8 @@ for i = 1:length(vfrac)
     for j = 2:index
         V(i,j) = V(i,j-1) - (vfrac(i)*intflowin_in(j)-vfrac(i)*...
             intflowin_in(j-1)) + (vfrac(i)*intflowout_in(j)-vfrac(i)*...
-            intflowout_in(j-1)) + (vfrac(i)*intflowin_exp(j)-vfrac(i)*...
-            intflowin_exp(j-1)) - (vfrac(i)*intflowout_exp(j)-vfrac(i)*...
+            intflowout_in(j-1)) + (vFractionOverTime(i,j)*intflowin_exp(j)-vFractionOverTime(i,j)*...
+            intflowin_exp(j-1)) - (vFractionOverTime(i,j)*intflowout_exp(j)-vFractionOverTime(i,j)*...
             intflowout_exp(j-1));
         % calculates the volume of each constituent i in the unit over time 
     end
