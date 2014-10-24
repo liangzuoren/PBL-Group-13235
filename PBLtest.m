@@ -309,7 +309,19 @@ end
 % calculates the volumetric flow rates of constituents in stream 7
 figure
 plot(overall_range,vflows1(1,:),overall_range,vflows4(1,:),overall_range,vflows6(1,:),overall_range,vflow2O2,overall_range,vflow5O2,overall_range,vflow7O2)
-title('Volumetric Flow Rates of Oxygen Throughout Airways')
+title('Volumetric Flow Rates of Oxygen Through Airways')
+
+figure
+plot(overall_range,vflows1(2,:),overall_range,vflows4(2,:),overall_range,vflows6(2,:),overall_range,vflow2CO2,overall_range,vflow5CO2,overall_range,vflow7CO2)
+title('Volumetric Flow Rates of Carbon Dioxide Through Airways')
+
+figure
+plot(overall_range,vflows1(3,:),overall_range,vflows4(3,:),overall_range,vflows6(3,:),overall_range,vflow2N2,overall_range,vflow5N2,overall_range,vflow7N2)
+title('Volumetric Flow Rates of Water Vapor Through Airways')
+
+figure
+plot(overall_range,vflows1(4,:),overall_range,vflows4(4,:),overall_range,vflows6(4,:),overall_range,vflow2H2O,overall_range,vflow5H2O,overall_range,vflow7H2O)
+title('Volumetric Flow Rates of Water Vapor Through Airways')
 
 RVentry = 0;
 [VO2entry,VCO2entry,VN2entry,VH2Oentry,Vtotentry, ...
