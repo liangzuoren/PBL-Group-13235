@@ -355,67 +355,52 @@ PH2Oentry = zeros(1,length(nflowH2Oentry));
 
 
 for i=2:length(nflowO2entry)
-   if VO2entry(i) > 0.0000000001;
        PO2diff = (nflowO2entry(i)*R*Tb*0.001)/(0.0691);
        PO2entry(i) = PO2entry(i-1) + PO2diff; 
-   else
-       PO2entry(i) = PO2entry(i-1);
-   end    
 end
 
 for i=2:length(nflowCO2entry)
-  
-   if VCO2entry(i)>0.000000000001;
    PCO2diff = (nflowCO2entry(i)*R*Tb*0.001)/(0.0691);
    PCO2entry(i) = PCO2entry(i-1) + PCO2diff;
-   else
-   PCO2entry(i) = PCO2entry(i-1);
-   end
 
 end
 
 for i=2:length(nflowN2entry)
 
-   if VN2entry(i)>0.000000000001;
    PN2diff = (nflowN2entry(i)*R*Tb*0.001)/(0.0691);
    PN2entry(i) = PN2entry(i-1) + PN2diff;
-   else
-   PN2entry(i) =  PN2entry(i-1);
-   end
 
 end
 
 for i=2:length(nflowH2Oentry)
 
-   if VH2Oentry(i)>0.000000000001;
    PH2Odiff = (nflowH2Oentry(i)*R*Tb*0.001)/(0.0691);
    PH2Oentry(i) = PH2Oentry(i-1) + PH2Odiff; 
-   else
-   PH2Oentry(i) = PH2Oentry(i-1);
-   end
 end
-   
-%PO2entry =(nflowO2entry*R*Tbss*0.001)./VO2entry;
-%PCO2entry =(nflowCO2entry*R*Tb*0.001)./VCO2entry;
-%PN2entry =(nflowNs2entry*R*Tb*0.001)./VN2entry;
-%PH2Oentry =(nflowH2Oentry*R*Tb*0.001)./VH2Oentry;
-
 
 figure
 plot(overall_range,PO2entry)
 title('Pressure of Oxygen in Entry Unit')
+xlabel('Time (s)')
+ylabel('Pressure (mmHg)')
 
 figure
 plot(overall_range,PCO2entry)
 title('Pressure of Carbon Dioxide in Entry Unit')
+xlabel('Time (s)')
+ylabel('Pressure (mmHg)')
 
 figure
 plot(overall_range,PN2entry)
 title('Pressure of Nitrogen in Entry Unit')
+xlabel('Time (s)')
+ylabel('Pressure (mmHg)')
 
 figure
 plot(overall_range,PH2Oentry)
 title('Pressure of Water in Entry Unit')
+xlabel('Time (s)')
+ylabel('Pressure (mmHg)')
 
 figure
 plot(overall_range,vflow1,overall_range,vflow4,overall_range,vflow6,...
@@ -467,11 +452,6 @@ ylabel('Volumetric Flow Rate (L/s)')
 
 
 
-figure
-plot(overall_range,PO2entry)
-title('Partial Pressure of Oxygen in Entry Unit')
-xlabel('Time (s)')
-ylabel('Pressure (mmHg)')
 % plots the partial pressures of constituents in the entry box over time
 figure
 plot(overall_range,VO2entry,overall_range,VCO2entry,overall_range,...
@@ -488,13 +468,71 @@ xlabel('Time (s)')
 ylabel(' Volume Percent (%)')
 
 % NEED TO ADD HUMIDIFICATION OCCURING OVER TIME IN ENTRY
+vflowtotal = -vflow7-vflow6;
+nflownet_ds = molrate(vflowtotal,vflow4,vflow5,vfrac1,vfrac4,vPercentOverTime,air_density,M_air,index_overall);
 
+nflowO2ds = nflownet_ds(1,:);
+nflowCO2ds = nflownet_ds(2,:);
+nflowN2ds = nflownet_ds(3,:);
+nflowH2Ods = nflownet_ds(4,:);
+
+PO2ds = zeros(1,length(nflowO2ds));
+PCO2ds = zeros(1,length(nflowCO2ds));
+PN2ds = zeros(1,length(nflowN2ds));
+PH2Ods = zeros(1,length(nflowH2Ods));
+
+
+
+for i=2:length(nflowO2ds)
+       PO2diff = (nflowO2ds(i)*R*Tb*0.001)/(0.0571);
+       PO2ds(i) = PO2ds(i-1) + PO2diff; 
+end
+
+for i=2:length(nflowCO2ds)
+  
+   
+   PCO2diff = (nflowCO2ds(i)*R*Tb*0.001)/(0.0571);
+   PCO2ds(i) = PCO2ds(i-1) + PCO2diff;
+   
+end
+
+
+for i=2:length(nflowN2ds)
+
+   PN2diff = (nflowN2ds(i)*R*Tb*0.001)/(0.0571);
+   PN2ds(i) = PN2ds(i-1) + PN2diff;
+   
+end
+
+for i=2:length(nflowH2Ods)
+
+   PH2Odiff = (nflowH2Ods(i)*R*Tb*0.001)/(0.0571);
+   PH2Ods(i) = PH2Ods(i-1) + PH2Odiff; 
+   
+end
 
 
 figure
-plot(overall_range,PO2ds,overall_range,PCO2ds,overall_range,...
-    PN2ds,overall_range,PH2Ods)
-title('Partial Pressure of Constituents in Dead Space Unit')
+plot(overall_range,PO2ds)
+title('Pressure of Oxygen in Dead Space')
+xlabel('Time (s)')
+ylabel('Pressure (mmHg)')
+
+figure
+plot(overall_range,PCO2ds)
+title('Pressure of Carbon Dioxide in Dead Space')
+xlabel('Time (s)')
+ylabel('Pressure (mmHg)')
+
+figure
+plot(overall_range,PN2ds)
+title('Pressure of Nitrogen in Dead Space')
+xlabel('Time (s)')
+ylabel('Pressure (mmHg)')
+
+figure
+plot(overall_range,PH2Ods)
+title('Pressure of Water in Dead Space')
 xlabel('Time (s)')
 ylabel('Pressure (mmHg)')
 % plots the partial pressures of constituents in the dead space unit over 
@@ -974,7 +1012,7 @@ resp_range = 0:tstep:length(nO2alveoliOverTime)*tstep-tstep;
 vPercentOverTime(1,:)= (nO2alveoliOverTime./nTotalOverTime*100); 
 vPercentOverTime(2,:) = (nCO2alveoliOverTime./nTotalOverTime*100);
 vPercentOverTime(3,:) = (nH2OalveoliOverTime./nTotalOverTime*100);
-vPercentOverTime(4,:) = (nN2alveoliOverTime./nTotalOverTime*100)
+vPercentOverTime(4,:) = (nN2alveoliOverTime./nTotalOverTime*100);
 figure
 plot(resp_range, PaO2alveoliOverTime);
 title('Partial Pressure of O2 in Alveoli Over Time')
